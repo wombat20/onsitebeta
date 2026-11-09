@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>ONSITE sb harness (test only)</title></head>
+<body>
+<!-- 테스트 전용: 화면 없이 저장 계층(js/onsite-store.js + js/onsite-sb.js)만 불러와 실제 서버와 주고받는지 확인해요.
+     ?app=master|operator  ?ev=TEST(기본) · 비밀번호 등은 테스트 스크립트가 런타임에 넘겨요(파일에는 없음) -->
+<script>window.ONSITE_APP=new URLSearchParams(location.search).get('app')||'master';</script>
+<script src="../../js/onsite-engine.js"></script>
+<script>
+  (function(){const q=new URLSearchParams(location.search);
+    CONFIG.code=q.get('ev')||'TEST';
+    if(q.get('sb'))CONFIG.SB_URL=q.get('sb');
+    if(q.get('dom'))CONFIG.OP_EMAIL_DOMAIN=q.get('dom');})();
+</script>
+<script src="../../js/onsite-store.js"></script>
+<script src="../../vendor/supabase-2.118.0.js"></script>
+<script src="../../js/onsite-sb.js"></script>
+<script>
+  window.KICKED=[];window.FIRES=0;
+  STORE.onKicked=m=>KICKED.push(m);
+  onDB(()=>{window.FIRES++;});
+  window.H={
+    state:()=>({mode:STORE.mode,sync:SYNC.state,pending:STORE.pending,me:STORE.auth&&STORE.auth.me,ready:J.ready,n:J.roster.length,fatal:STORE.fatal||null}),
+    app:no=>(DB.apps||{})[no]||null,
+    conduct:id=>(DB.conduct||{})[id]||null,
+    extra:id=>(DB.extra||{})[id]||null,
+    logs:()=>logList().map(l=>l.txt),
+    ops:()=>opList(),
+    masters:()=>Object.keys((DB.accounts||{}).masters||{}),
+  };
+</script>
+</body></html>

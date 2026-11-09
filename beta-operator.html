@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="robots" content="noindex">
+<title>ONSITE BETA — 운영관리자</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22512%22%20height%3D%22512%22%20viewBox%3D%220%200%20512.00%20512.00%22%3E%3Crect%20width%3D%22512%22%20height%3D%22512%22%20rx%3D%22139%22%20fill%3D%22%232466E0%22%2F%3E%3Cg%20transform%3D%22translate%28256%20256%29%20scale%281.75%29%20translate%28-88.3%20-80%29%22%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2280%22%20r%3D%2240%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%2234%22%2F%3E%3Cpath%20d%3D%22M88.3%2051.7%20L143.9%20107.3%20Q156.6%20120%20156.6%20102%20L156.6%2040%22%20fill%3D%22none%22%20stroke%3D%22%23FFFFFF%22%20stroke-width%3D%2234%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
+<link rel="stylesheet" href="fonts/wanted-sans/WantedSansVariable.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --pri:#2466E0;--pri-h:#1D56C4;--pri-weak:#EEF3FE;--pri-line:#C9D8F7;--navy:#0F1E45;--sky:#7FA6F0;
+  --tx:#0F1E45;--tx2:#5A6684;--tx3:#98A2B8;--line:#ECEEF3;--line2:#DFE3EB;
+  --bg:#FFFFFF;--bg-sub:#F5F7FB;--hover:#EEF1F7;
+  --ok:#1F9254;--ok-weak:#EAF6EF;--warn:#B8740F;--warn-weak:#FDF6EA;--err:#E5383B;--err-weak:#FDF1F1;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Wanted Sans Variable','Wanted Sans','Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-0.01em;color:var(--tx);line-height:1.5;background:#EDEEF1;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 0 34px;-webkit-font-smoothing:antialiased;}
+button,input,textarea,select{font:inherit;color:inherit;letter-spacing:inherit;}
+button{background:none;border:0;cursor:pointer;}
+svg.i{width:18px;height:18px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+svg.i.s14{width:14px;height:14px;} svg.i.s22{width:22px;height:22px;}
+
+/* 시연 컨트롤 (프레임 밖) */
+.doc-tag{font-size:12px;color:#8A8F99;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.doc-tag .logo-sym{height:12px;width:auto;display:inline-block;vertical-align:-1px;margin-right:5px;}
+.demo{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #E1E3E8;border-radius:8px;padding:3px 4px 3px 10px;}
+.demo b{color:var(--tx);font-variant-numeric:tabular-nums;margin:0 4px;}
+.demo button{height:24px;padding:0 8px;border-radius:5px;font-size:12px;color:var(--tx2);}
+.demo button:hover{background:var(--hover);color:var(--tx);}
+
+/* 프레임 */
+.frame{width:392px;height:866px;background:var(--bg);border:1px solid #E1E3E8;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 14px 30px rgba(22,22,29,.06),0 44px 88px rgba(22,22,29,.08);}
+.statusbar{height:50px;flex-shrink:0;position:relative;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 9px;}
+.statusbar .t{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;}
+.statusbar .sys{display:flex;align-items:center;gap:6px;}
+.island{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:104px;height:30px;background:#0b0b0e;border-radius:16px;}
+.main{flex:1;overflow:hidden;position:relative;}
+.main::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:var(--wm);z-index:5;}
+.page{height:100%;overflow-y:auto;padding:8px 20px 28px;}
+.page::-webkit-scrollbar{width:0;}
+.secure{-webkit-user-select:none;user-select:none;}
+body.shield .main{filter:blur(10px);}
+.frame.pre .main::after{display:none;}
+.shield-ov{display:none;position:absolute;inset:50px 0 0;z-index:40;align-items:center;justify-content:center;}
+body.shield .shield-ov{display:flex;}
+.shield-ov div{background:#fff;border:1px solid var(--line2);border-radius:12px;padding:16px 20px;text-align:center;font-size:13px;color:var(--tx2);box-shadow:0 12px 32px -8px rgba(15,30,69,.18);}
+.shield-ov b{display:block;color:var(--tx);font-size:14.5px;margin-bottom:2px;}
+
+/* 공통 */
+.appbar{display:flex;align-items:center;height:44px;margin-bottom:12px;}
+.appbar .logo-sym{height:22px;width:auto;display:block;}
+.iconbtn{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative;color:var(--tx2);}
+.iconbtn:hover{background:var(--hover);}
+.iconbtn .nd{position:absolute;top:7px;right:6px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--err);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.ml{margin-left:auto;} .mr-8{margin-right:-8px;}
+.ttl{font-size:22px;font-weight:700;letter-spacing:-0.025em;margin:6px 0 4px;}
+.sub{font-size:13px;color:var(--tx2);margin-bottom:20px;}
+.sec{margin-top:28px;}
+.sec-h{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;margin-bottom:8px;}
+.sec-h .meta{font-size:12.5px;font-weight:500;color:var(--tx3);}
+.note{font-size:12px;color:var(--tx3);line-height:1.55;margin-top:10px;}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;color:var(--tx3);white-space:nowrap;}
+.st::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.st.pri{color:var(--pri);} .st.ok{color:var(--ok);} .st.warn{color:var(--warn);} .st.err{color:var(--err);} .st.mute{color:var(--tx2);}
+.callout{display:flex;align-items:flex-start;gap:8px;padding:11px 13px;border-radius:10px;font-size:13px;line-height:1.5;margin-bottom:14px;}
+.callout svg{margin-top:1px;}
+.callout.err{background:var(--err-weak);color:var(--err);} .callout.warn{background:var(--warn-weak);color:var(--warn);} .callout.pri{background:var(--pri-weak);color:var(--pri);} .callout.ok{background:var(--ok-weak);color:var(--ok);}
+.callout b{font-weight:700;}
+.btn{height:48px;border-radius:12px;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--pri);color:#fff;width:100%;}
+.btn:hover{background:var(--pri-h);}
+.btn.ghost{background:#fff;color:var(--tx);border:1px solid var(--line2);}
+.btn.ghost:hover{background:var(--hover);}
+.btn.soft{background:var(--bg-sub);color:var(--tx);} .btn.soft:hover{background:var(--hover);}
+.btn.danger{background:var(--err);}
+.btn.sm{height:36px;font-size:13.5px;border-radius:9px;width:auto;padding:0 14px;}
+.btn[disabled]{opacity:.35;pointer-events:none;}
+.btns{display:flex;gap:8px;}
+.input{width:100%;height:46px;border:1px solid var(--line2);border-radius:10px;padding:0 14px;font-size:15px;outline:none;background:#fff;}
+.input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(36,102,224,.12);}
+textarea.input{height:auto;min-height:88px;padding:12px 14px;resize:none;line-height:1.5;}
+.flabel{font-size:13px;font-weight:600;color:var(--tx2);margin:16px 0 7px;}
+.seg{display:flex;background:var(--bg-sub);border-radius:10px;padding:3px;gap:2px;}
+.seg button{flex:1;height:34px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--tx2);white-space:nowrap;}
+.seg button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 2px rgba(15,30,69,.1);}
+.chips{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{height:36px;padding:0 13px;border-radius:18px;border:1px solid var(--line2);font-size:13.5px;font-weight:500;color:var(--tx2);background:#fff;}
+.chip.on{border-color:var(--pri);background:var(--pri-weak);color:var(--pri);font-weight:700;}
+.chip.on.err{border-color:var(--err);background:var(--err-weak);color:var(--err);}
+.chip.on.warn{border-color:var(--warn);background:var(--warn-weak);color:var(--warn);}
+.search{display:flex;align-items:center;gap:8px;height:44px;background:var(--bg-sub);border-radius:10px;padding:0 12px;color:var(--tx3);flex:1;}
+.search input{flex:1;border:0;background:none;outline:none;font-size:14px;color:var(--tx);min-width:0;}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);font-size:14.5px;cursor:pointer;}
+.toggle:last-child{border-bottom:0;}
+.cbox{width:22px;height:22px;border:1.6px solid var(--line2);border-radius:6px;flex-shrink:0;position:relative;background:#fff;}
+.cbox.on{background:var(--pri);border-color:var(--pri);}
+.cbox.on::after{content:"";position:absolute;width:10px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);top:5px;left:4.5px;}
+.kv{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;}
+.kv:last-child{border-bottom:0;}
+.kv .k{color:var(--tx2);} .kv .v{font-weight:600;font-variant-numeric:tabular-nums;}
+
+/* 운영보드 */
+.job .org{font-size:12.5px;color:var(--tx3);font-weight:500;}
+.job .nm{font-size:15px;font-weight:600;letter-spacing:-0.02em;line-height:1.45;color:var(--tx2);}
+.hero{margin-top:20px;}
+.hero .big{font-size:26px;font-weight:700;letter-spacing:-0.03em;line-height:1.3;}
+.hero .big em{font-style:normal;color:var(--pri);}
+.hero .big small{font-size:15px;color:var(--tx3);font-weight:600;margin-left:4px;}
+.pbar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:14px;}
+.pbar i{display:block;height:100%;background:var(--pri);border-radius:3px;transition:width .3s;}
+.facts{display:flex;margin-top:16px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.fact{flex:1;min-width:0;}
+.fact+.fact{padding-left:12px;border-left:1px solid var(--line);margin-left:12px;}
+.fact span{display:block;font-size:12px;color:var(--tx3);margin-bottom:2px;white-space:nowrap;}
+.fact b{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;}
+.fact.warn b{color:var(--warn);} .fact.err b{color:var(--err);}
+.nowstrip{padding:4px 16px;}
+.sess{background:#fff;border-radius:16px;padding:2px 14px 4px;margin-top:10px;}
+.sess .prow:last-child{border-bottom:0;}
+.sess-h{border-bottom-color:var(--line);}
+.block{background:#E3E7EF;}
+.nowrow{display:flex;align-items:center;gap:10px;padding:9px 0;font-size:13.5px;}
+.nowrow+.nowrow{border-top:1px solid var(--line);}
+.nowrow .rn{font-weight:700;width:58px;flex-shrink:0;}
+.nowrow .ss{flex:1;color:var(--tx2);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nowrow .ss b{color:var(--tx);}
+.dly{font-size:11.5px;font-weight:700;color:var(--err);margin-left:3px;}
+.shr{font-size:11.5px;font-weight:700;color:var(--ok);margin-left:3px;}
+.tools{display:flex;gap:8px;margin:12px 0 4px;}
+.qrbtn{display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;background:var(--pri);color:#fff;border-radius:10px;font-size:14px;font-weight:700;white-space:nowrap;}
+.sess{margin-top:6px;}
+.lhead{display:flex;gap:10px;font-size:11.5px;color:var(--tx3);padding:12px 4px 0;}
+.lhead span:first-child{width:46px;} .lhead span:nth-child(2){flex:1;}
+.sess-h{display:flex;align-items:baseline;gap:8px;padding:10px 0 8px;border-bottom:1px solid var(--line2);}
+.sess-h .tm{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}
+.sess-h .lb{font-size:12.5px;color:var(--tx2);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sess-h .rc{font-size:12.5px;color:var(--ok);font-weight:600;}
+.sess.now .sess-h .tm{color:var(--pri);}
+.sess.done .sess-h .tm,.sess.done .sess-h .lb{color:var(--tx3);}
+.nowtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--pri);border-radius:4px;padding:0 6px;line-height:18px;}
+.prow{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--line);cursor:pointer;}
+.prow:hover{background:var(--bg-sub);}
+.prow .no{width:46px;flex-shrink:0;font-size:12.5px;color:var(--tx3);font-variant-numeric:tabular-nums;}
+.prow .who{flex:1;min-width:0;}
+.prow .l1{font-size:14.5px;font-weight:700;display:flex;gap:6px;align-items:baseline;}
+.prow .l1 span{font-weight:500;color:var(--tx2);font-size:14px;}
+.prow .l2{font-size:12px;color:var(--tx3);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prow .l2 i{font-style:normal;color:var(--err);font-weight:600;}
+.prow.absent .l1,.prow.absent .l1 span{color:var(--tx3);text-decoration:line-through;}
+.block{display:flex;align-items:center;gap:8px;padding:11px 12px;margin-top:14px;background:var(--bg-sub);border-radius:10px;font-size:13px;color:var(--tx2);cursor:pointer;}
+.block b{font-variant-numeric:tabular-nums;color:var(--tx);}
+.block .ed{margin-left:auto;color:var(--tx3);font-size:12.5px;display:flex;align-items:center;gap:3px;}
+.empty{padding:28px 16px;text-align:center;font-size:13.5px;color:var(--tx3);line-height:1.6;background:var(--bg-sub);border-radius:12px;margin-top:14px;}
+
+/* 바텀시트 · 다이얼로그 · 토스트 */
+.dim{position:absolute;inset:0;background:rgba(15,30,69,.36);z-index:20;display:flex;flex-direction:column;justify-content:flex-end;}
+@keyframes fade{from{opacity:0}}
+.sheet{background:#fff;border-radius:20px 20px 0 0;max-height:88%;overflow-y:auto;padding:10px 20px 26px;}
+.dim.anim{animation:fade .15s;} .dim.anim .sheet{animation:up .2s;}
+.sheet::-webkit-scrollbar{width:0;}
+@keyframes up{from{transform:translateY(24px);opacity:0}}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line2);margin:0 auto 12px;}
+.sh-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;}
+.sh-h .ino{font-size:28px;font-weight:800;letter-spacing:-0.03em;line-height:1.15;}
+.sh-h .nm{font-size:15px;font-weight:600;margin-top:2px;}
+.sh-h .meta{font-size:12.5px;color:var(--tx3);}
+.sh-title{font-size:18px;font-weight:700;margin-bottom:4px;}
+.stepper{display:flex;align-items:center;gap:8px;}
+.stepper button{width:46px;height:46px;border-radius:10px;background:var(--bg-sub);font-size:13px;font-weight:700;color:var(--tx2);}
+.stepper button:hover{background:var(--hover);}
+.stepper .input{text-align:center;font-weight:700;font-variant-numeric:tabular-nums;flex:1;}
+.call{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:14px;background:var(--pri-weak);color:var(--pri);font-size:12.5px;font-weight:700;text-decoration:none;margin-left:8px;}
+.dlg-wrap{position:absolute;inset:0;background:rgba(15,30,69,.42);z-index:30;display:flex;align-items:center;justify-content:center;padding:28px;animation:fade .15s;}
+.dlg{background:#fff;border-radius:16px;padding:22px 20px 18px;width:100%;}
+.dlg b{display:block;font-size:16.5px;margin-bottom:6px;}
+.dlg p{font-size:13.5px;color:var(--tx2);line-height:1.55;margin-bottom:18px;}
+.toast{position:absolute;left:16px;right:16px;bottom:92px;background:var(--navy);color:#fff;font-size:13px;padding:12px 14px;border-radius:10px;z-index:50;display:flex;gap:8px;align-items:flex-start;animation:up .2s;line-height:1.45;}
+.toast.red{background:var(--err);}
+
+/* 체크인 */
+.idchk{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid transparent;background:#fff;border-radius:14px;cursor:pointer;}
+.idchk.on{border-color:var(--pri);background:var(--pri-weak);}
+.idchk .t{font-size:14.5px;font-weight:700;} .idchk .d{font-size:12.5px;color:var(--tx2);}
+.vf{margin-top:12px;height:270px;border-radius:16px;background:#121826;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.vf .box{width:170px;height:170px;position:relative;}
+.vf .box i{position:absolute;width:30px;height:30px;border:3px solid #fff;}
+.vf .box i:nth-child(1){top:0;left:0;border-right:0;border-bottom:0;border-radius:8px 0 0 0;}
+.vf .box i:nth-child(2){top:0;right:0;border-left:0;border-bottom:0;border-radius:0 8px 0 0;}
+.vf .box i:nth-child(3){bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 8px;}
+.vf .box i:nth-child(4){bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 8px 0;}
+.vf .line{position:absolute;left:12px;right:12px;height:2px;background:var(--sky);top:12px;animation:scan 1.8s ease-in-out infinite alternate;box-shadow:0 0 12px var(--sky);}
+@keyframes scan{to{top:156px}}
+.vf .cap{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:rgba(255,255,255,.75);font-size:12.5px;}
+.vf.off{background:#2A3142;} .vf.off .line{display:none;} .vf.off .box i{border-color:rgba(255,255,255,.3);}
+.res{text-align:center;padding:24px 16px 18px;background:#fff;border-radius:20px;}
+.res .ic{width:56px;height:56px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--ok-weak);color:var(--ok);}
+.res .ic svg{width:28px;height:28px;stroke-width:2.4;}
+.res.warn .ic{background:var(--warn-weak);color:var(--warn);}
+.res .lab{font-size:13px;color:var(--tx2);font-weight:600;}
+.res .ino{font-size:52px;font-weight:800;letter-spacing:-0.04em;line-height:1.1;margin:4px 0 2px;}
+.res .nm{font-size:17px;font-weight:700;}
+.res .meta{font-size:13px;color:var(--tx3);margin-top:2px;}
+.recent .r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+.recent .r:last-child{border-bottom:0;}
+.recent .r .tm{color:var(--tx3);font-variant-numeric:tabular-nums;width:40px;}
+.recent .r b{font-weight:700;}
+.recent .r .how{margin-left:auto;font-size:12px;color:var(--tx3);}
+
+/* 행동 강령 */
+.sum .big{font-size:26px;font-weight:700;letter-spacing:-0.03em;line-height:1.35;}
+.sum .big em{font-style:normal;color:var(--pri);}
+.sum .big em.err{color:var(--err);}
+.titem{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);}
+.card .titem:last-child{border-bottom:0;}
+.titem .tchk{width:24px;height:24px;border:1.6px solid var(--line2);border-radius:7px;flex-shrink:0;cursor:pointer;position:relative;}
+.titem .tchk.on{background:var(--pri);border-color:var(--pri);}
+.titem .tchk.on::after{content:"";position:absolute;width:10px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);top:6px;left:5px;}
+.titem .tm{font-size:15px;font-weight:700;width:46px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+.titem .bd{flex:1;min-width:0;}
+.titem .do{font-size:14px;font-weight:600;}
+.titem .who{font-size:12px;color:var(--tx3);}
+.titem.late .tm{color:var(--err);}
+.titem.soon .tm{color:var(--pri);}
+.titem.fin .tm,.titem.fin .do{color:var(--tx3);}
+.card .nowline{margin:8px 0;}
+.nowline{display:flex;align-items:center;gap:8px;margin:2px 0;font-size:11.5px;font-weight:700;color:var(--pri);}
+.nowline::after{content:'';flex:1;height:1.5px;background:var(--pri);}
+.fhead{display:flex;align-items:center;justify-content:space-between;padding:14px 0;cursor:pointer;border-top:1px solid var(--line2);margin-top:8px;font-size:14px;font-weight:600;color:var(--tx2);}
+.noti .n{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
+.noti .n:last-child{border-bottom:0;}
+.noti .n .k{font-size:11.5px;font-weight:700;width:58px;flex-shrink:0;padding-top:1px;}
+.noti .n .k.err{color:var(--err);} .noti .n .k.pri{color:var(--pri);} .noti .n .k.mute{color:var(--tx3);}
+.noti .n .x{font-size:13.5px;line-height:1.5;flex:1;}
+.noti .n .x small{display:block;color:var(--tx3);font-size:12px;}
+
+/* 이슈 */
+.iss{padding:14px 16px;background:#fff;border-radius:14px;margin-top:8px;}
+.iss.open{box-shadow:inset 3px 0 0 var(--err);}
+.iss .t{font-size:14.5px;font-weight:600;line-height:1.45;margin-bottom:4px;}
+.iss .m{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx3);}
+.iss .ph{width:64px;height:64px;border-radius:8px;object-fit:cover;margin-top:8px;display:block;background:var(--bg-sub);}
+.photo-pick{display:flex;gap:8px;align-items:center;}
+.photo-pick .add{width:72px;height:72px;border:1px dashed var(--line2);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--tx3);font-size:11.5px;cursor:pointer;}
+.photo-pick img{width:72px;height:72px;border-radius:10px;object-fit:cover;}
+
+/* 마이 */
+.profile{display:flex;align-items:center;gap:14px;padding:16px;background:#fff;border-radius:18px;}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--bg-sub);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--tx2);}
+.profile .nm{font-size:18px;font-weight:700;} .profile .rl{font-size:13px;color:var(--tx3);}
+.signpad{width:100%;height:150px;border:1px dashed var(--line2);border-radius:12px;background:var(--bg-sub);touch-action:none;display:block;}
+
+/* 탭바 */
+.tabbar{flex-shrink:0;border-top:1px solid var(--line);display:flex;padding:8px 6px 18px;background:#fff;position:relative;z-index:10;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--tx3);padding-top:4px;position:relative;}
+.tab.on{color:var(--pri);}
+.tab .lb{font-size:11px;font-weight:500;} .tab.on .lb{font-weight:700;}
+.tab .bd{position:absolute;top:0;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--err);color:#fff;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+/* 채팅 */
+.chatpage{height:100%;display:flex;flex-direction:column;background:#fff;}
+.chead{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 20px 12px;border-bottom:1px solid var(--line);}
+.chead .ct{font-size:20px;font-weight:800;letter-spacing:-0.02em;}
+.chead .cm{font-size:12px;color:var(--tx3);}
+.chead .seg button{height:30px;padding:0 10px;font-size:12.5px;flex:none;}
+.chatlist{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:16px 20px;}
+.chatlist::-webkit-scrollbar{width:0;}
+.bub{max-width:80%;}
+.bub .who{font-size:12px;color:var(--tx2);font-weight:600;margin:0 0 4px 2px;}
+.bub .msg{font-size:14px;line-height:1.5;background:var(--bg-sub);border-radius:16px 16px 16px 4px;padding:10px 13px;}
+.bub .tm{font-size:11px;color:var(--tx3);margin-top:4px;padding:0 2px;}
+.bub.me{align-self:flex-end;}
+.bub.me .msg{background:var(--pri);color:#fff;border-radius:16px 16px 4px 16px;}
+.bub.me .tm{text-align:right;}
+.cissue{align-self:stretch;border-left:3px solid var(--err);background:var(--err-weak);border-radius:4px 12px 12px 4px;padding:12px 14px;}
+.cissue.done{border-left-color:var(--line2);background:var(--bg-sub);}
+.ci-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.ci-b{font-size:12px;font-weight:700;color:var(--err);}
+.cissue.done .ci-b{color:var(--tx3);}
+.ci-act{font-size:12px;font-weight:700;color:var(--err);height:26px;padding:0 10px;border-radius:13px;background:#fff;}
+.ci-tx{font-size:14px;line-height:1.5;font-weight:600;}
+.cissue.done .ci-tx{color:var(--tx2);}
+.ci-ph{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--tx2);margin-top:6px;}
+.cissue .ph{width:72px;height:72px;border-radius:8px;object-fit:cover;margin-top:8px;display:block;}
+.ci-m{font-size:11.5px;color:var(--tx3);margin-top:6px;}
+.chatbar{flex-shrink:0;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;}
+.ibtn{display:flex;align-items:center;gap:4px;height:40px;padding:0 12px;flex-shrink:0;background:var(--err-weak);border-radius:20px;font-size:13px;font-weight:700;color:var(--err);}
+.cfield{flex:1;min-width:0;height:40px;background:var(--bg-sub);border:0;border-radius:20px;padding:0 16px;font-size:14px;outline:none;}
+.cfield:focus{box-shadow:0 0 0 2px var(--pri-line);}
+.csend{width:40px;height:40px;border-radius:50%;background:var(--pri);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;}
+
+/* ===== v8 테마 · 박스 없이 타이포·여백·구분선으로 위계 · 클린 화이트 + 비비드 블루 1색 + 레드(문제만) ===== */
+:root{
+  --pri:#1F6BFF;--pri-h:#1557E6;--pri-weak:#EBF2FF;--pri-line:#C7DAFF;--sky:#8DB4FF;--navy:#191F28;
+  --tx:#191F28;--tx2:#4E5968;--tx3:#8B95A1;--line:#EEF0F3;--line2:#E2E5EA;
+  --bg:#FFFFFF;--canvas:#F4F5F7;--bg-sub:#F7F8FA;--hover:#F2F4F6;
+  --ok:#1F6BFF;--ok-weak:#EBF2FF;--warn:#4E5968;--warn-weak:#F2F4F6;--err:#F04452;--err-weak:#FFEEEF;
+  --card-sh:0 1px 2px rgba(25,31,40,.04),0 4px 16px rgba(25,31,40,.05);
+}
+body{color:var(--tx);}
+.st{padding:3px 10px 3px 8px;border-radius:999px;background:#F2F4F6;color:var(--tx2);font-weight:600;line-height:1.45;}
+.st::before{background:currentColor;}
+.st.pri,.st.ok{background:var(--pri-weak);color:var(--pri);}
+.st.warn{background:#F2F4F6;color:var(--tx);}
+.st.err{background:var(--err-weak);color:var(--err);}
+.st.off,.st.mute{background:#F2F4F6;color:var(--tx3);}
+.callout{background:var(--bg-sub);color:var(--tx2);}
+.callout.ok,.callout.ok b,.callout.pri,.callout.pri b{background:var(--pri-weak);color:var(--pri);}
+.callout.warn,.callout.warn b{background:#F2F4F6;color:var(--tx);}
+.callout.err,.callout.err b{background:var(--err-weak);color:var(--err);}
+.btn.pri,.btn:not(.ghost):not(.soft):not(.sm):not(.xs){}
+
+/* 모바일: 흰 화면 · 박스 없음 · 섹션 사이 회색 띠(앱 표준 구분) */
+.frame,.statusbar,.main,.page{background:#fff;}
+.tabbar{background:#fff;border-top:1px solid var(--line);}
+.top .job,.job .nm{color:var(--tx);font-weight:700;}
+.hero{margin-top:18px;}
+.hero .hi{color:var(--tx2);font-weight:500;}
+.hero .big{font-size:30px;font-weight:800;letter-spacing:-0.035em;color:var(--tx);}
+.hero .big em{color:var(--pri);}
+.hero .big small{color:var(--tx3);}
+.pbar{height:8px;background:#EEF0F3;border-radius:4px;}
+.pbar i{background:var(--pri);border-radius:4px;}
+.facts{border-top:0;border-bottom:0;padding:18px 0 4px;}
+.fact span{color:var(--tx2);font-weight:500;}
+.fact b{font-size:18px;font-weight:800;color:var(--tx);white-space:nowrap;}
+.fact+.fact{border-left-color:var(--line2);}
+.fact.err b,.fact.alert b{color:var(--err);}
+.fact.warn b{color:var(--tx);}
+.sec,.card{background:transparent;border-radius:0;margin:26px -20px 0;padding:24px 20px 4px;border-top:10px solid #F2F4F6;box-shadow:none;}
+.sec-h{font-size:18px;font-weight:800;letter-spacing:-0.02em;margin-bottom:10px;}
+.sess,.iss,.res,.idchk,.profile{box-shadow:none;}
+.sess{background:transparent;padding:0;border-radius:0;margin-top:14px;}
+.sess-h .tm{font-size:17px;}
+.iss{background:transparent;border-radius:0;margin:0;padding:14px 0;border-bottom:1px solid var(--line);}
+.iss.open{box-shadow:none;padding-left:12px;border-left:3px solid var(--err);}
+.res{background:transparent;padding:18px 0 10px;}
+.idchk{background:var(--bg-sub);border:0;}
+.idchk.on{background:var(--pri-weak);}
+.profile{background:transparent;padding:4px 0 18px;border-bottom:1px solid var(--line);border-radius:0;}
+.nowstrip{padding:0 20px;}
+.search{background:var(--bg-sub);}
+.seg{background:#EEF0F3;}
+.tools .search{min-width:0;}
+.qrbtn{background:var(--pri);}
+.block{background:var(--bg-sub);}
+.callout{border-radius:12px;}
+.titem.late .tm{color:var(--err);}
+.prow:hover{background:var(--bg-sub);}
+
+
+.olog{padding:20px 24px 28px;}
+.ol-top .logo-sym{height:28px;width:auto;display:block;margin:20px 0 34px;}
+.olog h1{font-size:26px;font-weight:800;letter-spacing:-0.03em;margin-bottom:6px;}
+.ol-s{font-size:14px;color:var(--tx2);margin-bottom:12px;}
+.ol-err{display:flex;align-items:center;gap:6px;color:var(--err);font-size:13px;font-weight:600;margin-top:12px;}
+.ol-help{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:12.5px;color:var(--tx2);display:grid;gap:6px;}
+.ol-help b{color:var(--tx);margin-right:6px;}
+
+.cd-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:14px;padding:10px 2px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:none;}
+.cd-row .go{display:flex;align-items:center;gap:2px;font-size:13px;font-weight:600;color:var(--tx2);}
+
+/* 시연 도우미 (4개 화면 공통) */
+.demo-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:16px;}
+.demo-chip{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 12px;border:1px dashed #B9C3D3;border-radius:15px;background:#fff;color:#4E5968;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;}
+.demo-chip:hover{border-color:var(--pri);color:var(--pri);}
+.demo-chip[disabled]{opacity:.4;pointer-events:none;}
+.demo-chip svg{width:14px;height:14px;}
+.lg-foot{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--tx2);text-align:center;line-height:1.6;}
+.lg-foot a{color:var(--pri);font-weight:600;text-decoration:none;cursor:pointer;}
+
+svg.i.ph{fill:currentColor;stroke:none;}
+.all-row{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:22px;padding:14px 2px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left;font-size:15px;font-weight:700;color:var(--tx);}
+.all-row b{font-weight:700;color:var(--tx2);margin-left:4px;}
+.all-row em{display:inline-flex;align-items:center;gap:2px;font-style:normal;font-size:13.5px;font-weight:600;color:var(--tx2);}
+/* 로그인 안내 문구는 화면 맨 아래 */
+.olog{display:flex;flex-direction:column;}
+.olog>*{flex-shrink:0;}
+.olog .lg-foot{margin-top:auto;padding-top:24px;border-top:0;font-size:12.5px;color:var(--tx3);}
+.bd-sec{display:flex;align-items:center;justify-content:space-between;margin:28px 0 6px;}
+.bd-sec h3{font-size:16px;font-weight:800;letter-spacing:-0.02em;}
+.bd-sec span{font-size:12.5px;color:var(--tx3);}
+.bd-sec button{display:inline-flex;align-items:center;gap:2px;font-size:13px;font-weight:600;color:var(--tx2);}
+.bd-rooms{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.bd-room{padding:14px 14px 14px 0;}
+.bd-room+.bd-room{padding-left:14px;border-left:1px solid var(--line);}
+.bd-room .h{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.bd-room .h b{font-size:15px;font-weight:800;}
+.bd-room .s{font-size:12.5px;color:var(--tx2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bd-room .dash{display:flex;gap:4px;margin-top:12px;}
+.bd-room .dash i{flex:1;height:4px;border-radius:2px;background:#E5E8EE;}
+.bd-room .dash i.d{background:var(--pri);} .bd-room .dash i.c{background:#8DB4FF;}
+.bd-next{border-top:1px solid var(--line);margin-top:4px;}
+.bd-nx{display:flex;align-items:center;gap:14px;width:100%;padding:18px 0;border-bottom:1px solid var(--line);text-align:left;}
+.bd-nx .n{width:42px;height:42px;border-radius:12px;background:var(--pri-weak);color:var(--pri);font-size:14.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bd-nx .w{flex:1;min-width:0;}
+.bd-nx .w b{display:block;font-size:15px;font-weight:800;}
+.bd-nx .w b em{font-style:normal;font-weight:600;color:var(--tx2);margin-left:2px;}
+.bd-nx .w span{display:block;font-size:12.5px;color:var(--tx3);margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bd-empty{font-size:13.5px;color:var(--tx3);padding:14px 0;border-top:1px solid var(--line);}
+
+.cd-row{border-top:0!important;border-bottom:0!important;padding:0!important;margin-top:16px!important;}
+.cd-row .st{flex:1;justify-content:flex-start;height:44px;padding:0 14px 0 16px;border-radius:12px;font-size:14px;gap:8px;}
+.cd-row .st svg{width:15px;height:15px;margin-left:auto;}
+
+/* ===== BETA ===== */
+.beta{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:4px;background:var(--pri-weak);color:var(--pri);font-size:10.5px;font-weight:800;letter-spacing:.06em;margin-left:8px;}
+.doc-tag .beta{margin-left:2px;}
+.syncdot{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--tx3);font-weight:600;}
+.syncdot::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.syncdot.ok{color:var(--pri);} .syncdot.err{color:var(--err);}
+.dayline{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:2px;}
+.listhead{display:flex;align-items:center;gap:8px;margin:6px 0 12px;}
+.listhead .ttl{margin:0;}
+.ck-meta{font-size:12px;color:var(--tx3);}
+/* 모바일 실기기: 프레임 없이 전체 화면 */
+@media (max-width:520px){
+  body{padding:0;background:#fff;display:block;min-height:0;}
+  .doc-tag{display:none;}
+  .frame{width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none;}
+  .statusbar{display:none;}
+  .main{padding-top:env(safe-area-inset-top);}
+  .shield-ov{inset:0;}
+  .tabbar{padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom));}
+}
+</style>
+</head>
+<body>
+<div class="doc-tag"><span><svg class="logo-sym" role="img" aria-label="ONSITE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 177.00 120.00"><g transform="translate(0 -20)"><circle cx="60" cy="80" r="40" fill="none" stroke="#2466E0" stroke-width="34"/><path d="M88.3 51.7 L143.9 107.3 Q156.6 120 156.6 102 L156.6 40" fill="none" stroke="#2466E0" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/></g></svg>· 운영관리자 Mobile <span class="beta">BETA</span></span>
+  <div class="demo" id="demo"></div>
+</div>
+<div class="frame" id="frame">
+  <div class="statusbar"><span class="t" id="sbT">--:--</span><div class="island"></div>
+    <span class="sys"><svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#0F1E45"/><rect x="4.5" y="5" width="3" height="6" rx="1" fill="#0F1E45"/><rect x="9" y="2.5" width="3" height="8.5" rx="1" fill="#0F1E45"/><rect x="13.5" y="0" width="3" height="11" rx="1" fill="#0F1E45"/></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="#0F1E45" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.6" fill="#0F1E45"/><rect x="22.5" y="4" width="1.6" height="4" rx=".8" fill="#0F1E45" opacity=".4"/></svg></span></div>
+  <div class="main secure" id="main"></div>
+  <div class="tabbar" id="tabbar"></div>
+  <div id="layer"></div>
+  <div class="shield-ov"><div><b>화면 보호 중</b>운영관리자 화면 캡처 방지 · 앱 복귀 시 해제</div></div>
+</div>
+
+<script>
+/* =====================================================================
+   ONSITE BETA · 공통 엔진 (마스터 관리자 · 운영관리자 동일)
+   - 면접일 하루(CONFIG.date) 전용 · 시간표는 미리 생성·확정된 상태로 시작
+   - 저장: 이 브라우저(localStorage) · 같은 브라우저의 다른 탭과 실시간 연동
+   - 기기 간 공유(선택): CONFIG.SYNC_URL 에 Firebase Realtime Database 주소 입력
+   ===================================================================== */
+const CONFIG={
+  title:'2026년 한국소방산업기술원 채용 1차면접(실기) 전형',
+  org:'한국소방산업기술원',
+  date:'2026.11.11', dow:'수',
+  place:'한국소방산업기술원 (장소는 CONFIG.place에서 수정)',
+  code:'KFI26',
+  /* 지원자 명단 (실제 데이터)
+     applicants 에 한 줄씩 넣어 주세요 · no=수험번호, name=성명, field=지원분야, phone=연락처(선택)
+     예) {no:'A-001',name:'홍길동',field:'경영',phone:'010-1234-5678'},
+     비워 두면 아래 roster 기준으로 가상 명단을 만들어요 (테스트용) */
+  applicants:[
+  ],
+  roster:[['경영',20],['행정',15],['전산',10]], rosterPrefix:'A',
+  /* 시간표 조건 (확정본) */
+  cfg:{type:'group',start:'09:30',dur:20,rest:10,rooms:2,lunch:true,lunchStart:'12:30',lunchLen:60,arrive:30,groupMax:5,groupMaxMin:50,perMin:10},
+  useDevice:true, useFee:true,
+  statuses:['','접수예정','접수','연락중','불참'],
+  /* 마스터 계정 · 첫 로그인 때 비밀번호 변경을 요구해요 */
+  master:{id:'minnky23@gmail.com',name:'김민경',initPw:'Onsite2026!'},
+  /* 운영관리자 계정은 마스터 화면 > 운영자 초대에서 직접 만들어요
+     초대 링크가 운영자 화면 주소를 가리키도록, 두 파일을 다른 저장소에 올리면 운영자 화면 주소를 넣어 주세요
+     예) 'https://wombat20.github.io/onsite/beta-operator.html' · 비워 두면 같은 폴더의 beta-operator.html */
+  operatorUrl:'',
+  /* 선택: 휴대폰(운영자)과 PC(마스터)를 실시간으로 연결하려면 Firebase Realtime Database 주소를 넣어 주세요
+     예) 'https://내프로젝트-default-rtdb.asia-southeast1.firebasedatabase.app/onsite-beta'
+     비워 두면 이 브라우저에만 저장돼요 (같은 브라우저의 다른 탭끼리는 실시간 연동) */
+  SYNC_URL:''
+};
+
+/* ---------- 유틸 ---------- */
+const pad=n=>String(n).padStart(2,'0');
+const T=s=>{if(!s)return 0;const[a,b]=String(s).split(':').map(Number);return a*60+b;};
+const HM=m=>pad(Math.floor(m/60))+':'+pad(((m%60)+60)%60);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hash=s=>{let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h;};
+const rnd=(seed,n)=>hash(seed)%n;
+const sum=a=>a.reduce((x,y)=>x+y,0);
+
+/* ---------- 시각 (실제 시계 · 테스트용 ?t=13:15 고정 가능) ---------- */
+const QS=new URLSearchParams(location.search);
+let FIXED=(QS.get('t')&&/^\d{1,2}:\d{2}$/.test(QS.get('t')))?T(QS.get('t')):null;
+function nowMin(){if(FIXED!=null)return FIXED;const d=new Date();return d.getHours()*60+d.getMinutes();}
+function shiftClock(d){if(FIXED==null)return;FIXED=Math.max(T('07:00'),Math.min(T('20:00'),FIXED+d));}
+function todayStr(){const d=new Date();return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;}
+const isEventDay=()=>todayStr()===CONFIG.date;
+function stamp(){const d=new Date();return `${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;}
+const DATE_LABEL=`${CONFIG.date}(${CONFIG.dow})`;
+
+/* ---------- 명단 ---------- */
+const SURN='김이박최정강조윤장임한오서신권황안송류홍'.split('');
+const GIVEN=['민준','서연','도윤','지우','하준','서윤','시우','하은','지호','수아','예준','지민','유진','현우','채원','준서','다은','건우','소율','우진','예린','태윤','나연','정훈','가은'];
+function mkName(seed){return SURN[rnd(seed+'s',SURN.length)]+GIVEN[rnd(seed+'g',GIVEN.length)];}
+function mkRoster(spec,prefix){
+  const rows=[];let k=1;
+  spec.forEach(([field,n])=>{for(let i=0;i<n;i++){const no=`${prefix}-${String(1000+k).slice(1)}`;const seed=no+field;
+    rows.push({no,name:mkName(seed),field,phone:`010-${String(2000+rnd(seed+'p',7000))}-${String(1000+rnd(seed+'q',8999))}`});k++;}});
+  return rows;
+}
+function blankApp(){return{ino:'',status:'',device:'',inR:false,outR:false,fee:false,delay:0,note:'',ck:null};}
+
+const USING_SAMPLE=!(CONFIG.applicants&&CONFIG.applicants.length);
+const J={name:CONFIG.title,org:CONFIG.org,date:CONFIG.date,place:CONFIG.place,
+  roster:(CONFIG.applicants&&CONFIG.applicants.length)
+    ?CONFIG.applicants.filter(a=>a&&a.no&&a.name).map(a=>({no:String(a.no).trim(),name:String(a.name).trim(),field:String(a.field||'미지정').trim(),phone:String(a.phone||'').trim()}))
+    :mkRoster(CONFIG.roster,CONFIG.rosterPrefix),
+  rosterErrs:[],apps:{},arrive:{},sched:null,cfg:Object.assign({},CONFIG.cfg)};
+J.roster.forEach(r=>J.apps[r.no]=blankApp());
+
+/* ---------- 시간표 엔진 (기존 프로토타입과 동일 로직) ---------- */
+function validRoster(j){const bad=new Set(j.rosterErrs.map(e=>e.no));return j.roster.filter(r=>!bad.has(r.no));}
+function app(j,no){return j.apps[no]||(j.apps[no]=blankApp());}
+function person(j,no){return j.roster.find(r=>r.no===no);}
+function unitLen(j,attend){const c=j.cfg;return c.type==='group'?Math.min(c.groupMaxMin,attend*c.perMin):c.dur;}
+function buildSchedule(j){
+  const c=j.cfg;const R=Math.max(1,+c.rooms||1);
+  const byF={};validRoster(j).forEach(r=>{(byF[r.field]=byF[r.field]||[]).push(r.no);});
+  let pieces=Object.entries(byF).map(([f,nos])=>{const units=[];const size=c.type==='group'?Math.max(1,+c.groupMax):1;for(let i=0;i<nos.length;i+=size)units.push(nos.slice(i,i+size));return{field:f,units};});
+  while(pieces.length<R){pieces.sort((a,b)=>b.units.length-a.units.length);const p=pieces[0];if(p.units.length<2)break;const h=Math.ceil(p.units.length/2);pieces.splice(0,1,{field:p.field,units:p.units.slice(0,h)},{field:p.field,units:p.units.slice(h)});}
+  pieces.sort((a,b)=>b.units.length-a.units.length);
+  const rooms=Array.from({length:R},(_,i)=>({name:`${i+1}면접실`,start:c.start,items:[],load:0}));
+  pieces.forEach(p=>{const r=rooms.reduce((a,b)=>b.load<a.load?b:a);p.units.forEach(u=>r.items.push({kind:'s',field:p.field,members:u}));r.load+=sum(p.units.map(u=>unitLen(j,u.length)+c.rest));});
+  rooms.forEach((r,ri)=>{
+    let cur=T(r.start);const out=[];let placed=!c.lunch;
+    r.items.forEach(it=>{
+      const len=unitLen(j,it.members.length);
+      if(!placed&&cur>=T('11:30')&&cur+len>T(c.lunchStart)+20){out.push({kind:'lunch',start:HM(Math.min(cur,T('13:30'))),len:+c.lunchLen});cur=Math.max(cur,T('11:30'))+(+c.lunchLen);placed=true;}
+      out.push(it);cur+=len+(+c.rest);
+    });
+    out.forEach((it,k)=>it.id=`${it.kind==='s'?'s':'b'}${ri}_${k}`);
+    r.items=out;delete r.load;
+  });
+  j.sched={rooms};
+  numberSchedule(j);
+}
+function numberSchedule(j){
+  const all=[];j.sched.rooms.forEach((r,ri)=>timeline(j,r,false).forEach(x=>{if(x.kind==='s')all.push({x,ri});}));
+  all.sort((a,b)=>a.x.s-b.x.s||a.ri-b.ri);
+  const cnt={},gcnt={};
+  all.forEach(({x})=>{gcnt[x.field]=(gcnt[x.field]||0)+1;x.it.label=j.cfg.type==='group'?`${x.field} ${gcnt[x.field]}조`:x.field;x.members.forEach(no=>{cnt[x.field]=(cnt[x.field]||0)+1;app(j,no).ino=x.field+pad(cnt[x.field]);});});
+}
+function timeline(j,room,actual){
+  const c=j.cfg;let cur=T(room.start);const out=[];
+  room.items.forEach(it=>{
+    if(it.kind==='lunch'||it.kind==='break'){const s=Math.max(cur,T(it.start));out.push({kind:it.kind,it,s,e:s+it.len});cur=s+it.len;return;}
+    const attend=actual?it.members.filter(no=>app(j,no).status!=='불참').length:it.members.length;
+    const len=c.type==='group'?Math.min(c.groupMaxMin,attend*c.perMin):c.dur;
+    const planLen=unitLen(j,it.members.length);
+    let s=cur;
+    if(actual){const arr=Math.min(...it.members.map(no=>T(arriveOf(j,no))||0));if(arr)s=Math.max(cur,arr+10);}
+    const delay=actual?sum(it.members.map(no=>+app(j,no).delay||0)):0;
+    const e=s+len+delay;
+    out.push({kind:'s',it,field:it.field,members:it.members,s,e,len,planLen,delay,attend,label:it.label});
+    cur=e+(len>0?+c.rest:0);
+  });
+  return out;
+}
+function planOf(j){const m={};if(!j.sched)return m;j.sched.rooms.forEach(r=>timeline(j,r,false).forEach(x=>{if(x.kind==='s')x.members.forEach(no=>m[no]={s:x.s,e:x.e,room:r.name,label:x.label});}));return m;}
+function arriveOf(j,no){if(j.arrive[no])return j.arrive[no];const p=planOf(j)[no];return p?HM(p.s-(+j.cfg.arrive)):'';}
+function roomOf(j,no){if(!j.sched)return null;for(const r of j.sched.rooms)for(const it of r.items)if(it.kind==='s'&&it.members.includes(no))return r;return null;}
+
+/* 확정 시간표 생성 · 도착시간 고정 · 블록 기본값 보관 */
+buildSchedule(J);
+(()=>{const P=planOf(J);validRoster(J).forEach(r=>J.arrive[r.no]=HM(P[r.no].s-(+J.cfg.arrive)));})();
+J.sched.rooms.forEach(r=>r.items.forEach(it=>{if(it.kind!=='s')it.base={start:it.start,len:it.len};}));
+const PLAN0=planOf(J);
+const FIRST_ARRIVE=Math.min(...Object.values(J.arrive).map(T));
+const LAST_END=Math.max(...J.sched.rooms.map(rm=>{const tl=timeline(J,rm,false);return tl[tl.length-1].e;}));
+
+/* 행동 강령: 확정 시간표에서 자동 생성 */
+const CONDUCT_BASE=(()=>{
+  const L=[{id:'c-setup',t:HM(FIRST_ARRIVE-30),txt:'대기실 세팅 · 전자기기 보관함 확인',who:'접수'},
+           {id:'c-open',t:HM(FIRST_ARRIVE-10),txt:'지원자 접수 시작 · 신분증 확인',who:'접수'}];
+  J.sched.rooms.forEach(rm=>timeline(J,rm,false).forEach(x=>{if(x.kind!=='s')return;
+    L.push({id:`c-${x.it.id}-mv`,t:HM(x.s-10),txt:`${rm.name} · ${x.label} 대기실 이동·입실 준비`,who:'인솔'});
+    L.push({id:`c-${x.it.id}-out`,t:HM(x.e),txt:`${rm.name} · ${x.label} 퇴실 안내 · 전자기기 반환`,who:'접수'});
+  }));
+  L.push({id:'c-close',t:HM(LAST_END+10),txt:'전체 퇴실 확인 · 보관함 정리',who:'접수'});
+  return L;
+})();
+
+/* =====================================================================
+   데이터 저장 · 동기화
+   ===================================================================== */
+const STORE_KEY=`onsite-beta:${CONFIG.code}:${CONFIG.date}`;
+function emptyDB(){return{apps:{},blocks:{},conduct:{},extra:{},log:{},accounts:{ops:{}},resetAt:Date.now()};}
+function normDB(v){const d=emptyDB();if(v&&typeof v==='object')Object.keys(d).forEach(k=>{if(v[k]!=null)d[k]=v[k];});if(!d.accounts||typeof d.accounts!=='object')d.accounts={};if(!d.accounts.ops)d.accounts.ops={};return d;}
+function loadLocal(){try{return normDB(JSON.parse(localStorage.getItem(STORE_KEY)));}catch(e){return emptyDB();}}
+function saveLocal(){try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){}}
+let DB=loadLocal();
+const SYNC={on:!!CONFIG.SYNC_URL,state:CONFIG.SYNC_URL?'connecting':'local',listeners:[]};
+const syncBase=()=>CONFIG.SYNC_URL.replace(/\/+$/,'');
+
+function applyDB(){
+  J.roster.forEach(r=>{const a=J.apps[r.no];const d=(DB.apps||{})[r.no]||{};
+    a.status=d.status||'';a.device=d.device||'';a.inR=!!d.inR;a.outR=!!d.outR;a.fee=!!d.fee;a.delay=+d.delay||0;a.note=d.note||'';a.ck=d.ck||null;});
+  J.sched.rooms.forEach(r=>r.items.forEach(it=>{if(it.kind==='s')return;const o=(DB.blocks||{})[it.id];
+    it.start=(o&&o.start)||it.base.start;it.len=(o&&o.len!=null)?+o.len:it.base.len;}));
+}
+function setIn(o,path,val){
+  const ks=String(path).split('/').filter(Boolean);let c=o;
+  for(let i=0;i<ks.length-1;i++){if(c[ks[i]]==null||typeof c[ks[i]]!=='object')c[ks[i]]={};c=c[ks[i]];}
+  const k=ks[ks.length-1];if(val==null)delete c[k];else c[k]=val;
+}
+function onDB(fn){SYNC.listeners.push(fn);}
+function fireDB(){applyDB();SYNC.listeners.forEach(f=>{try{f();}catch(e){console.error(e);}});}
+function remotePut(path,val){
+  if(!SYNC.on)return;
+  fetch(`${syncBase()}${path?'/'+path:''}.json`,{method:'PUT',body:JSON.stringify(val)})
+    .then(r=>{if(!r.ok)throw 0;}).catch(()=>{SYNC.state='error';fireDB();});
+}
+function dbSet(path,val){setIn(DB,path,val);saveLocal();applyDB();remotePut(path,val==null?null:val);}
+function dbReset(){const keep=DB.accounts;DB=emptyDB();DB.accounts=keep||{ops:{}};saveLocal();applyDB();remotePut('',DB);} /* 계정은 유지 */
+function addLog(who,txt){const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);dbSet('log/'+k,{at:stamp(),who,txt});}
+function logList(){return Object.entries(DB.log||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>a.k<b.k?1:-1);}
+function syncLabel(){return SYNC.state==='live'?['실시간 동기화 연결됨','ok']:SYNC.state==='connecting'?['동기화 연결 중','']:SYNC.state==='error'?['동기화 오류 · 이 기기에 임시 저장','err']:['이 브라우저에 저장','mute'];}
+
+/* ---------- 계정 ---------- */
+async function hashPw(id,pw){const b=new TextEncoder().encode(String(id).trim().toLowerCase()+'|'+pw+'|onsite-beta');
+  if(window.crypto&&crypto.subtle){const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+  let h=hash(String.fromCharCode(...b));for(let i=0;i<500;i++)h=hash(h+'|'+pw);return 'f'+h.toString(16);}
+function genPw(){const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';let p='';const r=new Uint32Array(8);(window.crypto||{getRandomValues:a=>a.map(()=>Math.random()*1e9)}).getRandomValues(r);r.forEach(v=>p+=c[v%c.length]);return p.slice(0,4)+'-'+p.slice(4);}
+function pwRule(pw,old){if(!pw||pw.length<8)return '8자 이상 입력해 주세요';if(!/[A-Za-z]/.test(pw)||!/[0-9]/.test(pw))return '영문과 숫자를 함께 넣어 주세요';if(old&&pw===old)return '처음 받은 비밀번호와 다르게 정해 주세요';return '';}
+const opAcc=id=>((DB.accounts||{}).ops||{})[id]||null;
+const opList=()=>Object.entries((DB.accounts||{}).ops||{}).map(([id,a])=>Object.assign({id},a)).sort((a,b)=>a.id<b.id?-1:1);
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+const OP_ROLES=['접수','인솔','상주'];
+
+/* 같은 브라우저 다른 탭 */
+window.addEventListener('storage',e=>{if(e.key===STORE_KEY){DB=loadLocal();fireDB();}});
+
+/* 기기 간 실시간 동기화 (Firebase Realtime Database REST 스트리밍) */
+if(SYNC.on&&window.EventSource){
+  try{
+    const es=new EventSource(`${syncBase()}.json`);
+    es.addEventListener('put',e=>{const m=JSON.parse(e.data);
+      if(m.path==='/'){if(m.data==null)remotePut('',DB);else DB=normDB(m.data);}
+      else setIn(DB,m.path,m.data);
+      SYNC.state='live';saveLocal();fireDB();});
+    es.addEventListener('patch',e=>{const m=JSON.parse(e.data);const base=m.path==='/'?'':m.path;
+      Object.entries(m.data||{}).forEach(([k,v])=>setIn(DB,base+'/'+k,v));
+      SYNC.state='live';saveLocal();fireDB();});
+    es.onerror=()=>{if(SYNC.state!=='error'){SYNC.state='error';fireDB();}};
+  }catch(e){SYNC.state='error';}
+}
+applyDB();
+
+/* ---------- 행동 강령 ---------- */
+function conductList(){
+  const extra=Object.entries(DB.extra||{}).map(([id,c])=>Object.assign({id,extra:true},c));
+  return CONDUCT_BASE.concat(extra).map(c=>{const d=(DB.conduct||{})[c.id];return Object.assign({},c,{done:!!(d&&d.done),at:d&&d.at,by:d&&d.by});})
+    .sort((a,b)=>T(a.t)-T(b.t));
+}
+function lateConduct(now){return conductList().filter(c=>!c.done&&T(c.t)<now);}
+function soonConduct(now){return conductList().filter(c=>!c.done&&T(c.t)>=now&&T(c.t)-now<=10);}
+
+/* ---------- 공통 조회 ---------- */
+const R=()=>validRoster(J);
+const A=no=>app(J,no);
+const P=no=>person(J,no);
+function sessionOf(no){for(const rm of J.sched.rooms){const tl=timeline(J,rm,true);for(const x of tl){if(x.kind==='s'&&x.members.includes(no))return{x,room:rm};}}return null;}
+const sh0=x=>x.s-PLAN0[x.members[0]].s;
+const stLabel=s=>s||'공란';
+function statusCls(s){return s==='접수'?'pri':s==='연락중'?'err':s==='불참'?'mute':s==='접수예정'?'warn':'';}
+function setApp(no,patch,who,txt){const cur=Object.assign({},(DB.apps||{})[no]||{},patch);Object.keys(cur).forEach(k=>{if(cur[k]==null)delete cur[k];});dbSet('apps/'+no,cur);if(txt)addLog(who,txt);}
+function download(name,text){const b=new Blob(['﻿'+text],{type:'text/csv'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);}
+const csvCell=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+
+</script>
+<script>
+const SYM=`<svg class="logo-sym" role="img" aria-label="ONSITE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 177.00 120.00"><g transform="translate(0 -20)"><circle cx="60" cy="80" r="40" fill="none" stroke="#2466E0" stroke-width="34"/><path d="M88.3 51.7 L143.9 107.3 Q156.6 120 156.6 102 L156.6 40" fill="none" stroke="#2466E0" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
+const IC={"back": "<path d=\"M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z\"/>", "x": "<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z\"/>", "lock": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z\"/>", "qr": "<path d=\"M224,40V80a8,8,0,0,1-16,0V48H176a8,8,0,0,1,0-16h40A8,8,0,0,1,224,40ZM80,208H48V176a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H80a8,8,0,0,0,0-16Zm136-40a8,8,0,0,0-8,8v32H176a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V176A8,8,0,0,0,216,168ZM40,88a8,8,0,0,0,8-8V48H80a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8V80A8,8,0,0,0,40,88ZM80,72h96a8,8,0,0,1,8,8v96a8,8,0,0,1-8,8H80a8,8,0,0,1-8-8V80A8,8,0,0,1,80,72Zm8,96h80V88H88Z\"/>", "flag": "<path d=\"M42.76,50A8,8,0,0,0,40,56V224a8,8,0,0,0,16,0V179.77c26.79-21.16,49.87-9.75,76.45,3.41,16.4,8.11,34.06,16.85,53,16.85,13.93,0,28.54-4.75,43.82-18a8,8,0,0,0,2.76-6V56A8,8,0,0,0,218.76,50c-28,24.23-51.72,12.49-79.21-1.12C111.07,34.76,78.78,18.79,42.76,50ZM216,172.25c-26.79,21.16-49.87,9.74-76.45-3.41-25-12.35-52.81-26.13-83.55-8.4V59.79c26.79-21.16,49.87-9.75,76.45,3.4,25,12.35,52.82,26.13,83.55,8.4Z\"/>", "board": "<path d=\"M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z\"/>", "alert": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>", "id": "<path d=\"M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>", "edit": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z\"/>", "spark": "<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>", "list": "<path d=\"M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z\"/>", "search": "<path d=\"M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z\"/>", "user": "<path d=\"M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>", "chev": "<path d=\"M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "phone": "<path d=\"M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z\"/>", "arrowup": "<path d=\"M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z\"/>", "check": "<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>", "plus": "<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z\"/>", "chat": "<path d=\"M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z\"/>"};
+const ICF={"back": "<path d=\"M168,48V208a8,8,0,0,1-13.66,5.66l-80-80a8,8,0,0,1,0-11.32l80-80A8,8,0,0,1,168,48Z\"/>", "x": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM181.66,170.34a8,8,0,0,1-11.32,11.32L128,139.31,85.66,181.66a8,8,0,0,1-11.32-11.32L116.69,128,74.34,85.66A8,8,0,0,1,85.66,74.34L128,116.69l42.34-42.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216Z\"/>", "lock": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96Z\"/>", "qr": "<path d=\"M224,40V80a8,8,0,0,1-16,0V48H176a8,8,0,0,1,0-16h40A8,8,0,0,1,224,40ZM80,208H48V176a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H80a8,8,0,0,0,0-16Zm136-40a8,8,0,0,0-8,8v32H176a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V176A8,8,0,0,0,216,168ZM40,88a8,8,0,0,0,8-8V48H80a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8V80A8,8,0,0,0,40,88Zm32-8v96a8,8,0,0,0,8,8h96a8,8,0,0,0,8-8V80a8,8,0,0,0-8-8H80A8,8,0,0,0,72,80Z\"/>", "flag": "<path d=\"M232,56V176a8,8,0,0,1-2.76,6c-15.28,13.23-29.89,18-43.82,18-18.91,0-36.57-8.74-53-16.85C105.87,170,82.79,158.61,56,179.77V224a8,8,0,0,1-16,0V56a8,8,0,0,1,2.77-6h0c36-31.18,68.31-15.21,96.79-1.12C167,62.46,190.79,74.2,218.76,50A8,8,0,0,1,232,56Z\"/>", "board": "<path d=\"M120,56v48a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V56A16,16,0,0,1,56,40h48A16,16,0,0,1,120,56Zm80-16H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm-96,96H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm96,0H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Z\"/>", "alert": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-8,56a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm8,104a12,12,0,1,1,12-12A12,12,0,0,1,128,184Z\"/>", "id": "<path d=\"M112,120a16,16,0,1,1-16-16A16,16,0,0,1,112,120ZM232,56V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM135.75,166a39.76,39.76,0,0,0-17.19-23.34,32,32,0,1,0-45.12,0A39.84,39.84,0,0,0,56.25,166a8,8,0,0,0,15.5,4c2.64-10.25,13.06-18,24.25-18s21.62,7.73,24.25,18a8,8,0,1,0,15.5-4ZM200,144a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,144Zm0-32a8,8,0,0,0-8-8H152a8,8,0,0,0,0,16h40A8,8,0,0,0,200,112Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm-4,48a12,12,0,1,1-12,12A12,12,0,0,1,124,72Zm12,112a16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40a8,8,0,0,1,0,16Z\"/>", "edit": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z\"/>", "spark": "<path d=\"M208,144a15.78,15.78,0,0,1-10.42,14.94L146,178l-19,51.62a15.92,15.92,0,0,1-29.88,0L78,178l-51.62-19a15.92,15.92,0,0,1,0-29.88L78,110l19-51.62a15.92,15.92,0,0,1,29.88,0L146,110l51.62,19A15.78,15.78,0,0,1,208,144ZM152,48h16V64a8,8,0,0,0,16,0V48h16a8,8,0,0,0,0-16H184V16a8,8,0,0,0-16,0V32H152a8,8,0,0,0,0,16Zm88,32h-8V72a8,8,0,0,0-16,0v8h-8a8,8,0,0,0,0,16h8v8a8,8,0,0,0,16,0V96h8a8,8,0,0,0,0-16Z\"/>", "list": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM117.66,149.66l-32,32a8,8,0,0,1-11.32,0l-16-16a8,8,0,0,1,11.32-11.32L80,164.69l26.34-26.35a8,8,0,0,1,11.32,11.32Zm0-64-32,32a8,8,0,0,1-11.32,0l-16-16A8,8,0,0,1,69.66,90.34L80,100.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM192,168H144a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm0-64H144a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Z\"/>", "search": "<path d=\"M168,112a56,56,0,1,1-56-56A56,56,0,0,1,168,112Zm61.66,117.66a8,8,0,0,1-11.32,0l-50.06-50.07a88,88,0,1,1,11.32-11.31l50.06,50.06A8,8,0,0,1,229.66,229.66ZM112,184a72,72,0,1,0-72-72A72.08,72.08,0,0,0,112,184Z\"/>", "user": "<path d=\"M230.93,220a8,8,0,0,1-6.93,4H32a8,8,0,0,1-6.92-12c15.23-26.33,38.7-45.21,66.09-54.16a72,72,0,1,1,73.66,0c27.39,8.95,50.86,27.83,66.09,54.16A8,8,0,0,1,230.93,220Z\"/>", "chev": "<path d=\"M181.66,133.66l-80,80A8,8,0,0,1,88,208V48a8,8,0,0,1,13.66-5.66l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "phone": "<path d=\"M231.88,175.08A56.26,56.26,0,0,1,176,224C96.6,224,32,159.4,32,80A56.26,56.26,0,0,1,80.92,24.12a16,16,0,0,1,16.62,9.52l21.12,47.15,0,.12A16,16,0,0,1,117.39,96c-.18.27-.37.52-.57.77L96,121.45c7.49,15.22,23.41,31,38.83,38.51l24.34-20.71a8.12,8.12,0,0,1,.75-.56,16,16,0,0,1,15.17-1.4l.13.06,47.11,21.11A16,16,0,0,1,231.88,175.08Z\"/>", "arrowup": "<path d=\"M207.39,115.06A8,8,0,0,1,200,120H136v96a8,8,0,0,1-16,0V120H56a8,8,0,0,1-5.66-13.66l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,207.39,115.06Z\"/>", "check": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM205.66,85.66l-96,96a8,8,0,0,1-11.32,0l-40-40a8,8,0,0,1,11.32-11.32L104,164.69l90.34-90.35a8,8,0,0,1,11.32,11.32Z\"/>", "plus": "<path d=\"M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM184,136H136v48a8,8,0,0,1-16,0V136H72a8,8,0,0,1,0-16h48V72a8,8,0,0,1,16,0v48h48a8,8,0,0,1,0,16Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm-44,76a36,36,0,1,1-36-36A36,36,0,0,1,164,132Z\"/>", "chat": "<path d=\"M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24ZM84,140a12,12,0,1,1,12-12A12,12,0,0,1,84,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,128,140Zm44,0a12,12,0,1,1,12-12A12,12,0,0,1,172,140Z\"/>"};
+const ic=(n,c='')=>`<svg class="i ph ${c}" viewBox="0 0 256 256">${(/\bfill\b/.test(c)&&ICF[n])||IC[n]||''}</svg>`;
+const $=s=>document.querySelector(s);
+const AUTH_KEY=STORE_KEY+':op-auth';
+
+/* ===== 상태 ===== */
+const S={auth:null,change:null,loginErr:'',inviteMsg:'',lgId:'',tab:'board',room:'all',q:'',sheet:null,cdFilter:'전체',showDone:false,lastMin:nowMin()};
+function authFor(id){const a=id&&opAcc(id);return a&&!a.disabled&&!a.mustChange?{id,name:a.name,role:a.role}:null;}
+try{S.auth=authFor(localStorage.getItem(AUTH_KEY));}catch(e){}
+/* 초대 링크로 접속: 링크에 담긴 계정을 이 기기에 등록 */
+function processInvite(){const m=location.hash.match(/inv=([\w-]+)/);if(!m)return false;S.loginErr='';
+  try{const d=b64d(m[1]);const id=String(d.id).trim().toUpperCase();const cur=opAcc(id);
+    if(!d.h||!d.name)throw 0;
+    if(!cur||(+d.v||0)>(+cur.v||0))dbSet('accounts/ops/'+id,Object.assign({},cur||{},{name:d.name,role:d.role||'접수',pwHash:d.h,mustChange:true,v:+d.v||Date.now(),disabled:false}));
+    S.lgId=id;S.inviteMsg=`${esc(d.name)}님 초대를 확인했어요 · 안내받은 임시 비밀번호로 로그인해 주세요`;
+    if(S.auth&&S.auth.id!==id){S.auth=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}}
+    else if(S.auth)S.auth=authFor(id);
+  }catch(e){S.loginErr='초대 링크가 올바르지 않아요 · 채용 담당자에게 다시 받아 주세요';}
+  history.replaceState(null,'',location.pathname+location.search);return true;
+}
+processInvite();
+window.addEventListener('hashchange',()=>{if(processInvite()){S.sheet=null;S.change=null;render();}});
+const who=()=>`${S.auth?S.auth.name:'운영'} · 운영관리자`;
+
+/* ===== 공통 UI ===== */
+let toastT;
+function toast(m,red){const L=$('#frame');L.querySelectorAll('.toast').forEach(t=>t.remove());clearTimeout(toastT);const d=document.createElement('div');d.className='toast'+(red?' red':'');d.innerHTML=ic(red?'alert':'check','s14')+'<span>'+m+'</span>';L.appendChild(d);toastT=setTimeout(()=>d.remove(),2800);}
+function dialog(title,body,okLabel,okAct,danger,data=''){$('#layer').insertAdjacentHTML('beforeend',`<div class="dlg-wrap" id="dlg"><div class="dlg"><b>${title}</b><p>${body}</p><div class="btns"><button class="btn ghost" data-act="dlgClose">취소</button><button class="btn ${danger?'danger':''}" data-act="${okAct}" ${data}>${okLabel}</button></div></div></div>`);}
+const closeDlg=()=>{const d=$('#dlg');d&&d.remove();};
+
+/* ===== 운영보드 ===== */
+function pgBoard(){
+  const now=nowMin();const all=R();const n=s=>all.filter(r=>A(r.no).status===s).length;
+  const act=all.filter(r=>A(r.no).status!=='불참').length;const rec=n('접수');
+  const pct=act?Math.round(rec/act*100):0;
+  const late=lateConduct(now),soon=soonConduct(now);
+  const [sl,st]=syncLabel();
+  const rooms=J.sched.rooms.map(rm=>{const tl=timeline(J,rm,true).filter(x=>x.kind==='s');const cur=tl.find(x=>x.s<=now&&x.e>now);const nx=tl.find(x=>x.s>now);const last=tl[tl.length-1];const d=last?last.e-PLAN0[last.members[0]].e:0;
+    const chip=d>0?`<span class="st err">+${d}분</span>`:d<0?`<span class="st pri">${d}분</span>`:'<span class="st ok">정시</span>';
+    const line=cur?`${cur.label} 진행 · ~${HM(cur.e)}`:nx?`${nx.label} · ${HM(nx.s)} 입실`:'모든 조 종료';
+    return `<div class="bd-room"><div class="h"><b>${rm.name}</b>${chip}</div><div class="s">${line}</div>
+      <div class="dash">${tl.map(x=>`<i class="${x.e<=now?'d':x.s<=now?'c':''}"></i>`).join('')}</div></div>`;}).join('');
+  const upc=[];J.sched.rooms.forEach(rm=>timeline(J,rm,true).forEach(x=>{if(x.kind==='s'&&x.s>now)upc.push(x);}));upc.sort((a,b)=>a.s-b.s);
+  const nxt=[];for(const x of upc){for(const no of x.members){if(A(no).status!=='불참')nxt.push({no,x});}if(nxt.length>=3)break;}
+  const nextRows=nxt.slice(0,3).map(({no,x})=>{const a=A(no),pp=P(no);const num=(a.ino.match(/\d+/)||[''])[0];
+    return `<button class="bd-nx" data-act="open" data-no="${no}"><span class="n">${num}</span><span class="w"><b>${a.ino} <em>${esc(pp.name)}</em></b><span>${J.arrive[no]} 도착${CONFIG.useDevice&&a.device?` · 기기 ${a.device}번`:''} · ${x.label} ${HM(x.s)}</span></span><span class="st ${statusCls(a.status)}">${a.status||'미접수'}</span></button>`;}).join('');
+  return `
+  <div class="appbar">${SYM}<span class="beta">BETA</span><button class="iconbtn ml mr-8" data-act="noti" aria-label="알림">${ic('bell','s22')}${late.length+soon.length?`<span class="nd">${late.length+soon.length}</span>`:''}</button></div>
+  <div class="job"><div class="nm">${esc(J.name)}</div><div class="dayline" style="margin-top:4px"><span class="syncdot ${st}">${sl}</span></div></div>
+  ${isEventDay()?'':`<div class="callout" style="margin:12px 0 0">${ic('info','s14')}<span>면접일(${DATE_LABEL}) 전 테스트 중이에요 · 시각은 이 기기 시계 기준</span></div>`}
+  <div class="hero"><div class="big">접수 <em>${pct}%</em><small>${rec} / ${act}명</small></div><div class="pbar"><i style="width:${pct}%"></i></div>
+    <div class="facts"><div class="fact"><span>접수예정·공란</span><b>${n('접수예정')+n('')}</b></div><div class="fact ${n('연락중')?'err':''}"><span>연락중</span><b>${n('연락중')}</b></div><div class="fact"><span>불참</span><b>${n('불참')}</b></div><div class="fact ${late.length?'err':''}"><span>할 일 지남</span><b>${late.length}</b></div></div></div>
+  ${late.length?`<button class="cd-row" data-act="tab" data-t="conduct"><span class="st err">행동 강령 미완료 ${late.length}건${ic('chev','s14')}</span></button>`:''}
+  <div class="bd-sec"><h3>면접실 현황</h3><span>${HM(now)} 기준</span></div>
+  <div class="bd-rooms">${rooms}</div>
+  <div class="bd-sec"><h3>다음 입실</h3><button data-act="tab" data-t="list">전체 명단${ic('chev','s14')}</button></div>
+  ${nextRows?`<div class="bd-next">${nextRows}</div>`:`<div class="bd-empty">오늘 남은 입실이 없어요</div>`}
+  `;
+}
+
+/* ===== 명단 (접수 처리) ===== */
+function pgList(){
+  return `<div class="listhead"><div class="ttl">지원자 명단</div><span class="beta" style="margin-left:0">${R().length}명</span></div>
+  <div class="seg">${J.sched.rooms.map((rm,i)=>`<button class="${S.room===i?'on':''}" data-act="room" data-i="${i}">${rm.name}</button>`).join('')}<button class="${S.room==='all'?'on':''}" data-act="room" data-i="all">전체</button></div>
+  <div class="tools"><label class="search">${ic('search','s14')}<input placeholder="이름·수험번호·면접번호" data-inp="q" value="${esc(S.q)}"></label></div>
+  <div class="lhead"><span>도착</span><span>면접번호 · 성명</span><span>접수</span></div>
+  ${boardList()}
+  <div class="note">지원자를 눌러 접수 상태·입퇴실·지연을 기록해요 · 지연을 입력하면 이후 일정이 자동 조정되고 도착시간 안내는 그대로예요</div>`;
+}
+function sessRows(list,showRoom){
+  const now=nowMin();const q=S.q.trim();
+  return list.map(o=>{
+    if(o.x.kind!=='s'){if(q)return '';const it=o.x.it;const moved=it.start!==it.base.start||it.len!==it.base.len;return `<div class="block" data-act="editBlk" data-r="${o.ri}" data-i="${o.room.items.indexOf(it)}"><span>${showRoom?o.room.name+' · ':''}${o.x.kind==='lunch'?'점심시간':'휴식 및 평정'}</span><b>${HM(o.x.s)}–${HM(o.x.e)}</b>${moved?'<span class="st pri" style="font-size:11.5px">조정됨</span>':''}<span class="ed">${ic('edit','s14')}시간 조정</span></div>`;}
+    const x=o.x;const mem=x.members.filter(no=>{if(!q)return true;const pp=P(no);return (pp.name+no+A(no).ino).includes(q);});
+    if(!mem.length)return '';
+    const shift=sh0(x);const isNow=x.s<=now&&x.e>now,done=x.e<=now;
+    return `<div class="sess ${isNow?'now':''} ${done?'done':''}"><div class="sess-h"><span class="tm">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}</span><span class="lb">${showRoom?o.room.name+' · ':''}${x.label} · ${x.attend}/${x.members.length}명 · ${x.len}분${!done?` · 대기 ${HM(x.s-10)}`:''}</span>${x.len!==x.planLen?'<span class="rc">재산정</span>':''}${isNow?'<span class="nowtag">진행 중</span>':''}</div>
+      ${mem.map(no=>{const a=A(no),pp=P(no);return `<div class="prow ${a.status==='불참'?'absent':''}" data-act="open" data-no="${no}"><span class="no">${J.arrive[no]}</span><div class="who"><div class="l1">${a.ino}<span>${esc(pp.name)}</span></div><div class="l2">${no}${CONFIG.useDevice&&a.device?` · 기기 ${esc(a.device)}`:''}${a.inR?' · 입실':''}${a.outR?' · 퇴실':''}${a.delay?` · <i>DELAY +${a.delay}</i>`:''}${a.note?` · ${esc(a.note)}`:''}</div></div><span class="st ${statusCls(a.status)}">${stLabel(a.status)}</span></div>`;}).join('')}</div>`;
+  }).join('');
+}
+function boardList(){
+  let list=[];
+  if(S.room==='all'){J.sched.rooms.forEach((rm,ri)=>{timeline(J,rm,true).forEach(x=>list.push({x,room:rm,ri}));});list.sort((a,b)=>a.x.s-b.x.s||a.ri-b.ri);}
+  else{const rm=J.sched.rooms[S.room];list=timeline(J,rm,true).map(x=>({x,room:rm,ri:S.room}));}
+  const h=sessRows(list,S.room==='all');
+  return h.trim()?h:`<div class="empty">검색 결과 없음</div>`;
+}
+
+/* 지원자 시트 */
+function sheetApp(no){
+  const a=A(no),pp=P(no),so=sessionOf(no);const x=so.x,shift=sh0(x);
+  return `<div class="grab"></div>
+  <div class="sh-h"><div style="flex:1"><div class="ino">${a.ino}</div><div class="nm">${esc(pp.name)} <span style="color:var(--tx3);font-weight:500">· ${no}</span></div><div class="meta">${esc(pp.field)} · ${so.room.name} · ${x.label}</div></div><button class="iconbtn mr-8" data-act="closeSheet" aria-label="닫기">${ic('x')}</button></div>
+  <div style="margin-top:8px">
+    <div class="kv"><span class="k">연락처</span><span class="v">${pp.phone?`${esc(pp.phone)}<a class="call" href="tel:${pp.phone.replace(/[^0-9+]/g,'')}">${ic('phone','s14')}전화</a>`:'<span style="color:var(--tx3)">—</span>'}</span></div>
+    <div class="kv"><span class="k">도착시간 <small style="color:var(--tx3)">(안내 · 고정)</small></span><span class="v">${J.arrive[no]}</span></div>
+    <div class="kv"><span class="k">면접 시작 <small style="color:var(--tx3)">(내부)</small></span><span class="v">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''} · ${x.len}분</span></div>
+    ${a.ck?`<div class="kv"><span class="k">접수 처리</span><span class="v">${esc(a.ck.at)}${a.ck.by?` · ${esc(a.ck.by)}`:''}</span></div>`:''}
+  </div>
+  <div class="flabel">접수 상태</div>
+  <div class="chips">${CONFIG.statuses.map(s=>`<button class="chip ${a.status===s?'on':''} ${s==='불참'||s==='연락중'?'err':s==='접수예정'?'warn':''}" data-act="setSt" data-no="${no}" data-v="${s}">${stLabel(s)}</button>`).join('')}</div>
+  ${CONFIG.useDevice?`<div class="flabel">전자기기 보관번호</div><input class="input" inputmode="numeric" placeholder="번호 입력" value="${esc(a.device)}" data-f="device" data-no="${no}">`:''}
+  <div class="flabel">입실 · 퇴실${CONFIG.useFee?' · 면접비':''} <span style="font-weight:500;color:var(--tx3)">(체크만 기록)</span></div>
+  <div>${[['inR','입실'],['outR','퇴실']].concat(CONFIG.useFee?[['fee','면접비 지급']]:[]).map(([k,l])=>`<div class="toggle" data-act="tgl" data-no="${no}" data-k="${k}"><span>${l}</span><span class="cbox ${a[k]?'on':''}"></span></div>`).join('')}</div>
+  <div class="flabel">DELAY (분)</div>
+  <div class="stepper"><button data-act="dly" data-no="${no}" data-d="-5">−5</button><button data-act="dly" data-no="${no}" data-d="-1">−1</button><input class="input" type="number" inputmode="numeric" value="${a.delay||0}" data-f="delay" data-no="${no}"><button data-act="dly" data-no="${no}" data-d="1">+1</button><button data-act="dly" data-no="${no}" data-d="5">+5</button></div>
+  <div class="note" style="margin-top:6px">${so.room.name}의 이후 일정이 함께 조정돼요 · 도착시간 안내는 그대로예요</div>
+  <div class="flabel">비고</div>
+  <input class="input" placeholder="메모" value="${esc(a.note)}" data-f="note" data-no="${no}">
+  <button class="btn" style="margin-top:18px" data-act="closeSheet">완료</button>`;
+}
+function sheetBlock(ri,i){
+  const rm=J.sched.rooms[ri],it=rm.items[i];
+  return `<div class="grab"></div><div class="sh-title">${rm.name} ${it.kind==='lunch'?'점심시간':'휴식 및 평정'}</div><div class="sub" style="margin-bottom:6px">일찍 끝나거나 늦어진 경우 시간을 조정해 주세요 · 기존 ${it.base.start} · ${it.base.len}분</div>
+  <div class="flabel">시작 시각</div><input class="input" type="time" value="${it.start}" id="bk-s">
+  <div class="flabel">길이 (분)</div><input class="input" type="number" inputmode="numeric" value="${it.len}" id="bk-l">
+  <div class="btns" style="margin-top:20px"><button class="btn ghost" data-act="blkReset" data-r="${ri}" data-i="${i}">기존 시간으로</button><button class="btn" data-act="saveBlk" data-r="${ri}" data-i="${i}">저장</button></div>`;
+}
+
+/* ===== 행동 강령 ===== */
+function pgConduct(){
+  const now=nowMin();
+  const list=conductList().filter(c=>S.cdFilter==='전체'||c.who===S.cdFilter);
+  const open=list.filter(c=>!c.done),fin=list.filter(c=>c.done);const late=open.filter(c=>T(c.t)<now);
+  let nowPlaced=false;
+  const row=c=>{const late=!c.done&&T(c.t)<now,soon=!c.done&&!late&&T(c.t)-now<=10;
+    return `<div class="titem ${c.done?'fin':''} ${late?'late':''} ${soon?'soon':''}"><span class="tchk ${c.done?'on':''}" data-act="cd" data-id="${esc(c.id)}"></span><span class="tm">${c.t}</span><div class="bd"><div class="do">${esc(c.txt)}</div><div class="who">${esc(c.who)}${c.done&&c.at?` · ${c.at} 완료${c.by?` · ${esc(c.by)}`:''}`:''}</div></div>${c.done?'<span class="st">완료</span>':late?'<span class="st err">미완료</span>':soon?'<span class="st pri">곧</span>':'<span class="st">예정</span>'}</div>`;};
+  return `<div class="ttl">행동 강령</div><div class="sub">시간에 맞춰 할 일을 알려드려요 · 체크하면 마스터 화면에도 표시돼요</div>
+  <div class="sum"><div class="big">${late.length?`미완료 <em class="err">${late.length}건</em>`:`남은 일 <em>${open.length}건</em>`}</div><div class="pbar"><i style="width:${list.length?fin.length/list.length*100:0}%"></i></div></div>
+  ${late.length?`<div class="callout err" style="margin-top:14px">${ic('alert','s14')}<span>시간이 지난 할 일이 있어요 · <b>마스터 화면에도 함께 표시돼요</b></span></div>`:''}
+  <div class="chips" style="margin:16px 0 4px">${['전체','접수','인솔'].map(k=>`<button class="chip ${S.cdFilter===k?'on':''}" data-act="cdf" data-k="${k}">${k}</button>`).join('')}</div>
+  <div class="card">${open.map(c=>{let pre='';if(!nowPlaced&&T(c.t)>=now){pre=`<div class="nowline">지금 ${HM(now)}</div>`;nowPlaced=true;}return pre+row(c);}).join('')}${!nowPlaced?`<div class="nowline">지금 ${HM(now)}</div>`:''}${!open.length?'<div class="empty">남은 할 일이 없어요</div>':''}</div>
+  ${fin.length?`<div class="card"><div class="fhead" data-act="showDone" style="border:0;margin:0"><span>완료 ${fin.length}</span>${ic(S.showDone?'down':'chev','s14')}</div>${S.showDone?fin.map(row).join(''):''}</div>`:''}`;
+}
+function sheetNoti(){
+  const now=nowMin();const late=lateConduct(now),soon=soonConduct(now);
+  const items=[...late.map(c=>({k:'지남',cls:'err',x:c.txt,s:`${c.t} · 시점 경과 미완료`})),...soon.map(c=>({k:T(c.t)===now?'지금':'곧',cls:'pri',x:c.txt,s:`${c.t} · ${T(c.t)-now}분 후`}))];
+  return `<div class="grab"></div><div class="sh-title">알림</div><div class="noti">${items.map(n=>`<div class="n"><span class="k ${n.cls}">${n.k}</span><div class="x">${esc(n.x)}<small>${n.s}</small></div></div>`).join('')||'<div class="empty">새 알림 없음</div>'}</div>
+  <button class="btn soft" style="margin-top:14px" data-act="tab" data-t="conduct">행동 강령 보기</button>`;
+}
+
+/* ===== 마이 ===== */
+function pgMy(){
+  const me=S.auth;const [sl,st]=syncLabel();
+  return `<div class="ttl">마이</div>
+  <div class="profile" style="margin-top:12px"><span class="avatar">${esc(me.name[0])}</span><div><div class="nm">${esc(me.name)}</div><div class="rl">운영관리자 · ${esc(me.role)} · ${esc(J.org)}</div></div></div>
+  <div class="sec"><div class="sec-h">계정</div>
+    <div class="kv"><span class="k">아이디</span><span class="v">${esc(me.id)}</span></div>
+    <div class="kv"><span class="k">비밀번호</span><button class="call" style="border:0;margin:0" data-act="pwSheet">변경</button></div>
+    <div class="kv"><span class="k">사용 기간</span><span class="v">${DATE_LABEL} 당일</span></div>
+    <div class="kv"><span class="k">화면 캡처 제한</span><span class="st pri">적용 중</span></div></div>
+  <div class="sec"><div class="sec-h">베타 정보</div>
+    <div class="kv"><span class="k">데이터 저장</span><span class="syncdot ${st}">${sl}</span></div>
+    <div class="kv"><span class="k">면접 장소</span><span class="v" style="font-weight:500;font-size:13px">${esc(J.place)}</span></div>
+    <div class="kv"><span class="k">지원자 · 면접실</span><span class="v">${R().length}명 · ${J.sched.rooms.length}개</span></div></div>
+  <button class="btn ghost" style="margin-top:24px" data-act="logout">로그아웃</button>`;
+}
+
+/* ===== 렌더 ===== */
+const TABS=[['board','운영보드','board'],['list','명단','id'],['conduct','행동 강령','list'],['my','마이','user']];
+function pgLogin(){
+  return `<div class="page olog">
+    <div class="ol-top">${SYM}</div>
+    <h1>현장 운영 로그인 <span class="beta" style="vertical-align:4px">BETA</span></h1>
+    <p class="ol-s">${esc(J.name)}<br>안내받은 아이디와 비밀번호를 입력해 주세요</p>
+    ${S.inviteMsg?`<div class="callout pri" style="margin:4px 0 0">${ic('check','s14')}<span>${S.inviteMsg}</span></div>`:''}
+    <div class="flabel">아이디</div><input class="input" id="lg-id" placeholder="아이디" autocomplete="off" autocapitalize="characters" value="${esc(S.lgId)}">
+    <div class="flabel">비밀번호</div><input class="input" id="lg-pw" type="password" placeholder="비밀번호">
+    ${S.loginErr?`<div class="ol-err">${ic('alert','s14')}${S.loginErr}</div>`:''}
+    <button class="btn" style="margin-top:22px" data-act="login">로그인</button>
+    <div class="lg-foot">계정 안내를 받지 못했다면 채용 담당자에게 문의해 주세요</div>
+  </div>`;
+}
+function pgChange(){
+  const a=opAcc(S.change.id)||{};
+  return `<div class="page olog">
+    <div class="ol-top">${SYM}</div>
+    <h1>비밀번호 변경</h1>
+    <p class="ol-s">${esc(a.name||'')}님, 처음 로그인했어요<br>앞으로 쓸 비밀번호를 정해 주세요</p>
+    <div class="flabel">아이디</div><input class="input" value="${esc(S.change.id)}" disabled style="background:var(--bg-sub)">
+    <div class="flabel">새 비밀번호</div><input class="input" id="np1" type="password" placeholder="영문·숫자 포함 8자 이상" autocomplete="new-password">
+    <div class="flabel">새 비밀번호 확인</div><input class="input" id="np2" type="password" placeholder="한 번 더 입력" autocomplete="new-password">
+    ${S.loginErr?`<div class="ol-err">${ic('alert','s14')}${S.loginErr}</div>`:''}
+    <button class="btn" style="margin-top:22px" data-act="pwSave">변경하고 시작하기</button>
+    <button class="btn ghost" style="margin-top:8px" data-act="pwCancel">취소</button>
+  </div>`;
+}
+function sheetPw(){
+  return `<div class="grab"></div><div class="sh-title">비밀번호 변경</div><div class="sub" style="margin-bottom:6px">영문·숫자 포함 8자 이상</div>
+  <div class="flabel">현재 비밀번호</div><input class="input" id="op0" type="password" autocomplete="current-password">
+  <div class="flabel">새 비밀번호</div><input class="input" id="op1" type="password" autocomplete="new-password">
+  <div class="flabel">새 비밀번호 확인</div><input class="input" id="op2" type="password" autocomplete="new-password">
+  ${S.pwErr?`<div class="ol-err">${ic('alert','s14')}${S.pwErr}</div>`:''}
+  <div class="btns" style="margin-top:20px"><button class="btn ghost" data-act="closeSheet">취소</button><button class="btn" data-act="pwChange">변경</button></div>`;
+}
+function renderClock(){
+  const t=HM(nowMin());$('#sbT').textContent=t;
+  $('#demo').innerHTML=FIXED!=null?`테스트 시각<b>${t}</b><button data-act="clock" data-d="-10">−10분</button><button data-act="clock" data-d="10">+10분</button>`:`현재 시각<b>${t}</b>`;
+}
+function render(keep){
+  const m=$('#main');
+  $('#frame').classList.toggle('pre',!S.auth);
+  renderClock();
+  if(!S.auth){m.innerHTML=S.change?pgChange():pgLogin();$('#tabbar').style.display='none';renderSheet();return;}
+  $('#tabbar').style.display='';const y=keep?(m.querySelector('.page')||{}).scrollTop:0;
+  const h={board:pgBoard,list:pgList,conduct:pgConduct,my:pgMy}[S.tab]();
+  m.innerHTML=`<div class="page">${h}</div>`;if(keep)m.querySelector('.page').scrollTop=y;
+  const late=lateConduct(nowMin()).length;
+  $('#tabbar').innerHTML=TABS.map(([k,l,i])=>`<button class="tab ${S.tab===k?'on':''}" data-act="tab" data-t="${k}">${ic(i,'s22'+(S.tab===k?' fill':''))}<span class="lb">${l}</span>${k==='conduct'&&late?`<span class="bd">${late}</span>`:''}</button>`).join('');
+  renderSheet();
+}
+function renderSheet(){
+  const L=$('#layer');const prev=L.querySelector('.sheet');const sy=prev?prev.scrollTop:0;
+  L.querySelectorAll('.dim').forEach(d=>d.remove());
+  if(!S.sheet||!S.auth)return;
+  const s=S.sheet;const h=s.type==='app'?sheetApp(s.no):s.type==='blk'?sheetBlock(s.ri,s.i):s.type==='pw'?sheetPw():sheetNoti();
+  L.insertAdjacentHTML('afterbegin',`<div class="dim ${prev?'':'anim'}" data-act="dim"><div class="sheet secure">${h}</div></div>`);
+  const sh=L.querySelector('.sheet');if(prev)sh.scrollTop=sy;
+}
+/* 다른 기기·탭 변경 반영 (입력 중이면 입력이 끝난 뒤) */
+let pending=false;
+function safeRender(){const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.closest('#frame')){pending=true;return;}render(true);}
+document.addEventListener('focusout',()=>{if(pending)setTimeout(()=>{if(pending){pending=false;safeRender();}},0);});
+onDB(safeRender);
+setInterval(()=>{const m=nowMin();if(m!==S.lastMin){S.lastMin=m;const s=soonConduct(m).find(c=>T(c.t)===m||T(c.t)-m===10);if(s&&S.auth)toast(`${T(s.t)===m?'지금 할 일':'10분 후'} · ${esc(s.txt)}`);safeRender();}},10000);
+
+/* ===== 기록 ===== */
+function setStatus(no,v){
+  const ap=A(no);const so=sessionOf(no);const before=so.x.len;const old=ap.status;
+  const patch={status:v};let dev='';
+  if(v==='접수'){if(!ap.ck)patch.ck={at:HM(nowMin()),how:'수동',by:S.auth.name};
+    if(CONFIG.useDevice&&!ap.device){const mx=Math.max(0,...R().map(r=>+A(r.no).device||0));patch.device=String(mx+1);dev=patch.device;}}
+  else patch.ck=null;
+  if(v==='불참'){patch.inR=false;patch.device='';}
+  setApp(no,patch,who(),`${ap.ino} ${P(no).name} 접수 상태 ${stLabel(old)} → ${stLabel(v)}`);
+  const after=sessionOf(no).x.len;
+  toast(v==='불참'&&before!==after?`불참 처리 · ${so.x.label} 면접시간 ${before}분 → ${after}분`:`${ap.ino} ${stLabel(v)}${dev?` · 전자기기 ${dev}번`:''}`);
+  render(true);
+}
+function setDelay(no,v){
+  const ap=A(no);const rm=sessionOf(no).room;
+  setApp(no,{delay:v},who(),`${ap.ino} DELAY ${v}분`);
+  const lastAfter=timeline(J,rm,true).filter(x=>x.kind==='s').pop().e;
+  toast(`${ap.ino} 지연 ${v}분 · ${rm.name} 종료 예정 ${HM(lastAfter)}`);render(true);
+}
+
+/* ===== 로그인 · 비밀번호 ===== */
+async function doLogin(){
+  const id=$('#lg-id').value.trim().toUpperCase(),pw=$('#lg-pw').value;S.lgId=id;
+  if(!id||!pw){S.loginErr='아이디와 비밀번호를 입력해 주세요';render();return;}
+  const acc=opAcc(id);
+  if(!acc){S.loginErr='이 기기에 등록되지 않은 아이디예요 · 처음에는 채용 담당자에게 받은 초대 링크로 접속해 주세요';render();return;}
+  if(acc.disabled){S.loginErr='사용 중지된 계정이에요 · 채용 담당자에게 문의해 주세요';render();return;}
+  if(await hashPw(id,pw)!==acc.pwHash){S.loginErr='아이디 또는 비밀번호가 맞지 않아요';render();return;}
+  S.loginErr='';S.inviteMsg='';
+  if(acc.mustChange){S.change={id,old:pw};render();setTimeout(()=>{const el=$('#np1');el&&el.focus();},0);return;}
+  finishLogin(id);
+}
+function finishLogin(id){
+  S.auth=authFor(id);S.change=null;S.tab='board';try{localStorage.setItem(AUTH_KEY,id);}catch(e){}
+  dbSet('accounts/ops/'+id+'/lastLogin',stamp());addLog(who(),'로그인');setWM();render();toast(`${S.auth.name} · ${S.auth.role} 담당으로 로그인`);
+}
+async function savePw(){
+  const n=$('#np1').value,c=$('#np2').value;const id=S.change.id;
+  const err=pwRule(n,S.change.old);if(err){S.loginErr=err;render();return;}
+  if(n!==c){S.loginErr='새 비밀번호가 서로 달라요';render();return;}
+  const acc=opAcc(id);const nx=Object.assign({},acc,{pwHash:await hashPw(id,n),mustChange:false,changedAt:stamp()});delete nx.temp;
+  dbSet('accounts/ops/'+id,nx);addLog(`${acc.name} · 운영관리자`,'첫 로그인 · 비밀번호 변경');S.loginErr='';finishLogin(id);
+}
+async function changePw(){
+  const id=S.auth.id;const acc=opAcc(id);const o=$('#op0').value,n=$('#op1').value,c=$('#op2').value;
+  if(await hashPw(id,o)!==acc.pwHash){S.pwErr='현재 비밀번호가 맞지 않아요';renderSheet();return;}
+  const err=pwRule(n,o);if(err){S.pwErr=err==='처음 받은 비밀번호와 다르게 정해 주세요'?'현재 비밀번호와 다르게 정해 주세요':err;renderSheet();return;}
+  if(n!==c){S.pwErr='새 비밀번호가 서로 달라요';renderSheet();return;}
+  const nx=Object.assign({},acc,{pwHash:await hashPw(id,n),changedAt:stamp()});delete nx.temp;dbSet('accounts/ops/'+id,nx);
+  addLog(who(),'비밀번호 변경');S.sheet=null;render(true);toast('비밀번호를 바꿨어요');
+}
+/* 다른 기기에서 계정이 중지·삭제·초기화되면 로그아웃 */
+onDB(()=>{if(!S.auth)return;const a=authFor(S.auth.id);if(!a){S.auth=null;S.sheet=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}render();toast('계정 상태가 바뀌어 로그아웃됐어요 · 채용 담당자에게 확인해 주세요',true);}else S.auth=a;});
+
+/* ===== 이벤트 ===== */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;const no=t.dataset.no;
+  switch(a){
+    case 'login':doLogin();break;
+    case 'pwSave':savePw();break;
+    case 'pwCancel':S.change=null;S.loginErr='';render();break;
+    case 'pwSheet':S.pwErr='';S.sheet={type:'pw'};renderSheet();break;
+    case 'pwChange':changePw();break;
+    case 'logout':addLog(who(),'로그아웃');S.auth=null;S.lgId='';S.sheet=null;try{localStorage.removeItem(AUTH_KEY);}catch(e){}render();break;
+    case 'dim':if(e.target===t){S.sheet=null;renderSheet();}break;
+    case 'closeSheet':S.sheet=null;render(true);break;
+    case 'dlgClose':closeDlg();break;
+    case 'clock':shiftClock(+t.dataset.d);S.lastMin=nowMin();render(true);break;
+    case 'tab':S.tab=t.dataset.t;S.sheet=null;render();break;
+    case 'noti':S.sheet={type:'noti'};renderSheet();break;
+    case 'room':S.room=t.dataset.i==='all'?'all':+t.dataset.i;render(true);break;
+    case 'open':S.sheet={type:'app',no};renderSheet();break;
+    case 'setSt':{const ap=A(no),v=t.dataset.v;if(ap.status===v)break;
+      if(v==='불참'){dialog('불참 처리',`${ap.ino} ${esc(P(no).name)}<br>불참으로 처리하면 해당 조 면접시간이 자동으로 줄어들어요`,'불참 처리','doAbsent',true,`data-no="${no}"`);break;}
+      setStatus(no,v);break;}
+    case 'doAbsent':closeDlg();setStatus(no,'불참');break;
+    case 'tgl':{const ap=A(no),k=t.dataset.k;const v=!ap[k];const lb={inR:'입실',outR:'퇴실',fee:'면접비'}[k];
+      setApp(no,{[k]:v},who(),`${ap.ino} ${lb} ${v?'체크':'해제'}`);
+      if(k==='outR'&&v&&CONFIG.useDevice&&ap.device)toast(`퇴실 · 전자기기 ${esc(ap.device)}번 반환 확인`);render(true);break;}
+    case 'dly':{const ap=A(no);setDelay(no,Math.max(0,(+ap.delay||0)+ +t.dataset.d));break;}
+    case 'editBlk':S.sheet={type:'blk',ri:+t.dataset.r,i:+t.dataset.i};renderSheet();break;
+    case 'saveBlk':{const rm=J.sched.rooms[+t.dataset.r],it=rm.items[+t.dataset.i];const os=it.start,ol=it.len;const ns=$('#bk-s').value||it.start,nl=Math.max(0,+$('#bk-l').value||0);
+      dbSet('blocks/'+it.id,{start:ns,len:nl});addLog(who(),`${rm.name} ${it.kind==='lunch'?'점심':'휴식'} ${os}·${ol}분 → ${ns}·${nl}분`);S.sheet=null;render(true);toast('시간 변경 · 이후 일정에 반영됐어요');break;}
+    case 'blkReset':{const rm=J.sched.rooms[+t.dataset.r],it=rm.items[+t.dataset.i];dbSet('blocks/'+it.id,null);addLog(who(),`${rm.name} ${it.kind==='lunch'?'점심':'휴식'} 기존 시간으로 복원`);S.sheet=null;render(true);toast('기존 시간으로 되돌렸어요');break;}
+    case 'cd':{const id=t.dataset.id;const c=conductList().find(x=>x.id===id);if(!c)break;
+      dbSet('conduct/'+id,c.done?null:{done:true,at:HM(nowMin()),by:S.auth.name});addLog(who(),`행동 강령 ${c.done?'완료 취소':'완료'} · ${c.t} ${c.txt}`);render(true);break;}
+    case 'cdf':S.cdFilter=t.dataset.k;render(true);break;
+    case 'showDone':S.showDone=!S.showDone;render(true);break;
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return;const id=e.target.id;
+  if(['lg-id','lg-pw'].includes(id)){e.preventDefault();doLogin();}else if(['np1','np2'].includes(id)){e.preventDefault();savePw();}else if(['op0','op1','op2'].includes(id)){e.preventDefault();changePw();}});
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.dataset.inp==='q'){const pos=t.selectionStart;S.q=t.value;render(true);const el=document.querySelector('[data-inp="q"]');if(el){el.focus();el.setSelectionRange(pos,pos);}}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.f&&S.auth){const no=t.dataset.no,ap=A(no);
+    if(t.dataset.f==='delay'){setDelay(no,Math.max(0,+t.value||0));return;}
+    const v=t.value.trim();if(v===ap[t.dataset.f])return;
+    setApp(no,{[t.dataset.f]:v},who(),t.dataset.f==='device'?`${ap.ino} 전자기기 ${v?v+'번':'번호 삭제'}`:`${ap.ino} 비고 · ${v||'삭제'}`);
+    if(t.dataset.f==='device'&&v)toast(`전자기기 보관번호 ${esc(v)}번`);render(true);}
+});
+
+/* 캡처 방지 (운영관리자 화면 필수) */
+function setWM(){const nm=S.auth?S.auth.name:'운영관리자';const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='220' height='120'><text x='6' y='76' transform='rotate(-22 110 60)' font-family='sans-serif' font-size='11' fill='rgba(15,30,69,0.05)'>${nm} · 운영관리자 · ONSITE BETA</text></svg>`;document.documentElement.style.setProperty('--wm',`url("data:image/svg+xml,${encodeURIComponent(svg)}")`);}
+setWM();
+document.addEventListener('visibilitychange',()=>document.body.classList.toggle('shield',document.hidden));
+document.addEventListener('contextmenu',e=>{if(e.target.closest('.secure')){e.preventDefault();toast('개인정보 보호를 위해 저장할 수 없어요',true);}});
+
+render();
+</script>
+</body>
+</html>

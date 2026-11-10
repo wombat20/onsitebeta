@@ -26,11 +26,13 @@ if(!lib||!lib.createClient){
   return;
 }
 /* 약한 신호에서 요청이 끝없이 걸려 대기열·동기화가 멈추지 않도록 모든 요청에 제한시간을 둬요
-   로그인·토큰 갱신(/auth/v1/)은 60초: 갱신 요청을 중간에 끊고 같은 토큰으로 다시 보내면 서버가 재사용으로 보고 로그인을 끊을 수 있어요 */
+   토큰 갱신만 60초: 갱신 요청을 중간에 끊고 같은 토큰으로 다시 보내면 서버가 재사용으로 보고 로그인을 끊을 수 있어요
+   (로그인·로그아웃·데이터 요청은 20초) */
 const AUTH_TIMEOUT_MS=60000;
 function tfetch(input,init){
   init=init||{};const url=String((input&&input.url)||input||'');
-  const c=new AbortController();const t=setTimeout(()=>c.abort(),url.includes('/auth/v1/')?AUTH_TIMEOUT_MS:TIMEOUT_MS);const s=init.signal;
+  const refresh=url.includes('/auth/v1/token')&&url.includes('grant_type=refresh_token');
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),refresh?AUTH_TIMEOUT_MS:TIMEOUT_MS);const s=init.signal;
   if(s){if(s.aborted)c.abort();else s.addEventListener('abort',()=>c.abort(),{once:true});}
   return fetch(input,Object.assign({},init,{signal:c.signal})).finally(()=>clearTimeout(t));
 }
@@ -384,7 +386,9 @@ STORE.loadAllLogs=async function(){
    netOk: 마지막 서버 요청(동기화·전송)이 성공했는지 · setNet() 처럼 인자 없이 부르면 그 결과로 다시 계산만 해요 */
 let rtLive=false,netOk=false;
 function setNet(ok){
+  const was=netOk;
   if(ok!==undefined)netOk=!!ok;
+  if(was&&!netOk&&RUN.on)schedule();   // 방금 실패했으면 30초를 기다리지 않고 3초 뒤 다시 확인해요
   if(SYNC.state==='connecting'&&ok===undefined)return;   // 처음 불러오기가 끝나기 전에는 '연결 중' 유지
   const next=!netOk?'error':(OUT.q.length&&!OUT.busy?'error':(rtLive?'live':'poll'));
   if(SYNC.state!==next){SYNC.state=next;fireDB();}
@@ -392,7 +396,8 @@ function setNet(ok){
 
 /* ---------- 실행 ---------- */
 const RUN={on:false,timer:null,chan:null,blocked:false,release:null,lockEp:0,tk:null,beat:null};
-function schedule(){clearTimeout(RUN.timer);if(!RUN.on)return;RUN.timer=setTimeout(async()=>{try{await pull();}catch(e){}finally{OUT.kick();schedule();}},rtLive?POLL_SLOW:POLL_FAST);}
+/* 실시간 연결이 살아 있고 마지막 요청이 성공했으면 30초, 아니면 3초마다 확인 (한 번 실패한 뒤 '연결 끊김'이 오래 남지 않게) */
+function schedule(){clearTimeout(RUN.timer);if(!RUN.on)return;RUN.timer=setTimeout(async()=>{try{await pull();}catch(e){}finally{OUT.kick();schedule();}},rtLive&&netOk?POLL_SLOW:POLL_FAST);}
 let deb=null;const soon=()=>{clearTimeout(deb);deb=setTimeout(()=>pull(),250);};
 function subscribe(){
   try{
@@ -491,7 +496,7 @@ function stopSync(){
 }
 /* 전자기기 보관번호를 서버에서 배정받아요 (동시에 접수해도 겹치지 않음) · 실패하면 null */
 STORE.assignDevice=async function(no){
-  if(!navigator.onLine||RUN.blocked||SYNC.state==='error')return null;     // 연결이 불안하면 바로 이 기기에서 배정
+  if(!navigator.onLine||RUN.blocked)return null;     // 오프라인이면 바로 이 기기에서 배정 · 그 밖에는 4초까지 서버에 물어봐요
   try{
     const c=new AbortController();const t=setTimeout(()=>c.abort(),4000);
     const r=await sb.rpc('assign_device',{p_ev:EV,p_no:no}).abortSignal(c.signal);clearTimeout(t);

@@ -260,7 +260,7 @@ merge + null-key deletion, conduct/extra insert, no apps delete, no roster write
 duplicate `k` → 23505 / no update or delete (also for masters); `last_login` only; master-only actions → `forbidden`;
 `reset_op` (old token zero rows + 401 at admin-ops, old password fails, new temp works); `set_disabled` (same token zero
 rows immediately, writes denied, sign-in `user_banned`, re-enable restores); `set_role`; cross-event isolation;
-`delete_op`; `reset_event`; `purge_event`. It cleans up its TEST operators at the end. Uses ~7 direct sign-ins per run.
+`delete_op`; `reset_event`; `purge_event`; leaves one active TEST operator (`TEST-S01`; remove it with admin-ops `delete_op` as the QA master, or with the TEST removal SQL below). Uses ~7 direct sign-ins per run.
 
 ## Advisor findings (final)
 

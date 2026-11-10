@@ -91,4 +91,4 @@ node supabase/tests/api_e2e.mjs # 서버 API 직접 호출 (74개) · SECRETS_DI
 
 - Node 의 fetch 가 프록시를 거쳐야 하는 환경이면 `NODE_USE_ENV_PROXY=1` 을 붙여 실행해요.
 
-> TEST 행사와 QA 마스터는 아직 서버에 있어요(테스트가 끝나면 운영자 계정과 기록은 스스로 지워요). 행사가 끝난 뒤 `supabase/README.md` 의 SQL 로 지우세요. 지운 뒤 다시 돌리려면 admin-ops `bootstrap` 으로 다시 만들어야 해요.
+> TEST 행사와 QA 마스터는 아직 서버에 있어요. 화면·저장 계층 테스트는 끝나면 운영자 계정과 기록을 스스로 지우고, `api_e2e.mjs` 는 TEST 운영자 하나(`TEST-S01`)를 남겨요. 행사가 끝난 뒤 `supabase/README.md` 의 SQL 로 지우세요. 지운 뒤 다시 돌리려면 admin-ops `bootstrap` 으로 다시 만들어야 해요.

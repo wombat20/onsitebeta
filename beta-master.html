@@ -624,9 +624,9 @@ function loadXLSX(){
 function handleFile(f){
   if(!f)return;
   const go=(table,name)=>{const res=parseTimetable(table);showPreview(res,name);};
-  if(/\.csv$/i.test(f.name)){const r=new FileReader();r.onload=()=>{const buf=r.result;let txt=new TextDecoder('utf-8').decode(buf);
-      // 한글 엑셀의 기본 'CSV (쉼표로 분리)'는 CP949(EUC-KR)로 저장돼요 → 글자가 깨지면 그걸로 다시 읽어요
-      if(txt.includes('\ufffd')){try{txt=new TextDecoder('euc-kr').decode(buf);}catch(e){}}
+  if(/\.csv$/i.test(f.name)){const r=new FileReader();r.onload=()=>{const buf=r.result;let txt;
+      // 한글 엑셀의 기본 'CSV (쉼표로 분리)'는 CP949(EUC-KR)로 저장돼요 → UTF-8 로 읽을 수 없으면 그걸로 다시 읽어요
+      try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){try{txt=new TextDecoder('euc-kr').decode(buf);}catch(_){txt=new TextDecoder('utf-8').decode(buf);}}
       go(parseCSV(txt.replace(/^\ufeff/,'')),f.name);};r.readAsArrayBuffer(f);return;}
   if(!/\.xls[xm]?$/i.test(f.name)){toast('엑셀(.xlsx) 또는 CSV 파일만 올릴 수 있어요',true);return;}
   toast('엑셀을 읽는 중…');
@@ -843,13 +843,16 @@ function renderKeep(){
   const ae=document.activeElement;const inView=ae&&ae.closest&&ae.closest('#view');
   const key=inView?focusKey(ae):null;let val=null,s0=null,s1=null;
   // 사용자가 직접 고친 값만 지켜요 (손대지 않은 칸은 서버에서 온 새 값을 그대로 보여줘요)
-  if(key&&'value' in ae&&ae.type!=='checkbox'&&ae.value!==ae.defaultValue){val=ae.value;}
+  // 선택 상자는 고르는 즉시 저장되니 늘 서버 값을 보여줘요
+  if(key&&'value' in ae&&ae.type!=='checkbox'&&ae.tagName!=='SELECT'&&ae.value!==ae.defaultValue){val=ae.value;}
   if(key){try{s0=ae.selectionStart;s1=ae.selectionEnd;}catch(e){}}
   keepScroll(render);
   if(!key)return;const el=document.querySelector(key);if(!el)return;
   if(val!=null&&el.value!==val)el.value=val;
   try{el.focus({preventScroll:true});if(s0!=null)el.setSelectionRange(s0,s1);}catch(e){}
 }
+/* 아직 저장하지 않은 글자가 있는 입력 칸 (비고·전자기기·DELAY 등) */
+function dirtyText(ae){return !!(ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&!/^(checkbox|radio|button|submit|file)$/.test(ae.type)&&!ae.dataset.inp&&ae.value!==ae.defaultValue);}
 /* 미루는 경우: 아직 저장하지 않은 입력 · 한글 조합 중 · 펼친 선택 상자 · 열린 창(모달) */
 function busyField(ae){
   if(!ae||!ae.closest||!ae.closest('#view'))return false;
@@ -860,17 +863,18 @@ function busyField(ae){
 }
 function safeRender(){
   if($('#modal-root').innerHTML||busyField(document.activeElement)){
-    pending=true;if(!pendingSince)pendingSince=Date.now();
+    if(!pending)pendingSince=Date.now();pending=true;
     if(S.auth&&!S.booting)renderNav();   // 연결 상태 표시는 계속 바꿔요
     return;
   }
   pending=false;pendingSince=0;renderKeep();
 }
-document.addEventListener('focusout',()=>{if(pending)setTimeout(()=>{if(pending){safeRender();}},0);});
+document.addEventListener('focusout',()=>{S.composing=false;if(pending)setTimeout(()=>{if(pending){safeRender();}},0);});   // 조합 중에 칸을 떠나도 '조합 중'이 남지 않게
 onDB(safeRender);
 setInterval(()=>{const m=nowMin();
-  // 입력 칸에 오래(15초+) 머물러 있으면 입력값을 지키면서 화면을 새로 그려요 (현장 현황이 멈춰 보이지 않게)
-  if(pending&&pendingSince&&Date.now()-pendingSince>15000&&!S.composing&&!$('#modal-root').innerHTML){pending=false;pendingSince=0;S.lastMin=m;renderKeep();return;}
+  // 선택 상자 등에 오래(15초+) 머물러 있으면 화면을 새로 그려요 (현장 현황이 멈춰 보이지 않게)
+  // 글자를 입력하는 중(저장 전·한글 조합 중)이거나 창이 열려 있으면 기다려요 → 덜 쓴 내용이 저장되지 않게
+  if(pending&&pendingSince&&Date.now()-pendingSince>15000&&!S.composing&&!$('#modal-root').innerHTML&&!dirtyText(document.activeElement)){pending=false;pendingSince=0;S.lastMin=m;renderKeep();return;}
   if(m!==S.lastMin){S.lastMin=m;safeRender();}},10000);
 
 /* =====================================================================
@@ -1012,7 +1016,7 @@ function inpUpdate(t){
   if(tb){tb.innerHTML=monBody(S.monQ.trim(),nowMin());return;}   // 표 본문만 바꿔요 → 검색창은 그대로
   renderKeep();
 }
-document.addEventListener('compositionstart',e=>{if(e.target.dataset&&e.target.dataset.inp)S.composing=true;});
+document.addEventListener('compositionstart',e=>{if(e.target.closest&&e.target.closest('#view'))S.composing=true;});
 document.addEventListener('compositionend',e=>{S.composing=false;const t=e.target;if(t.dataset&&t.dataset.inp)inpUpdate(t);if(pending)setTimeout(()=>{if(pending)safeRender();},0);});
 document.addEventListener('input',e=>{
   const t=e.target;

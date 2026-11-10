@@ -15,7 +15,7 @@ during setup live only outside the repo (see "Accounts in place").
 | `migrations/20261109150400_strip_signup_nonce.sql` | keeps the consumed ticket nonce out of `user_metadata` |
 | `migrations/20261109235900_sync_pull.sql` | `public.sync_pull` (written by the client author; applied with the others) |
 | `migrations/20261110010000_review_fixes.sql` | `app_patch` per-field last-write-wins (`p_ts`), `assign_device` (atomic locker numbers), server-stamped log author trigger |
-| `functions/admin-ops/index.ts` | edge function for account / event administration (deployed with `verify_jwt=false`, authorizes in code) |
+| `functions/admin-ops/index.ts` | edge function for account / event administration (deployed with `verify_jwt=false`, authorizes in code; redeploy with `supabase functions deploy admin-ops --no-verify-jwt` or MCP `deploy_edge_function` with `verify_jwt:false`, otherwise `bootstrap` stops working) |
 | `tests/rls_matrix.sql` | role-impersonation matrix (269 checks), always rolled back |
 | `tests/api_e2e.mjs` | end-to-end test through the real HTTP API (74 checks; destructive for event `TEST` only) |
 
@@ -67,7 +67,7 @@ RPCs (schema `public`):
 
 | Function | Security | Who | What |
 |---|---|---|---|
-| `app_patch(p_ev, p_no, p_patch jsonb)` | INVOKER (RLS applies) | authenticated | upsert apps: `data = jsonb_strip_nulls(data || p_patch)`; a `null` value deletes the key (merge is shallow, nested objects are replaced) |
+| `app_patch(p_ev, p_no, p_patch jsonb, p_ts jsonb default null)` | INVOKER (RLS applies) | authenticated | upsert apps with per-field last-write-wins: a field is applied only if its `p_ts` time is newer than the stored `data._ts` time for that field; a `null` value deletes the key (merge is shallow, nested objects are replaced) |
 | `sync_pull(p_ev, p_since, p_log_after)` | INVOKER | authenticated | one-shot delta pull used by the client |
 | `admin_kill_sessions(uid)` | DEFINER | service_role only | `delete from auth.sessions where user_id = uid` |
 | `admin_use_bootstrap_token(sha256)` | DEFINER | service_role only | atomically marks an unused token used, returns true/false |
@@ -168,7 +168,7 @@ The client must map an operator login ID to this address before `signInWithPassw
 
 | Event | Login | Kind | State |
 |---|---|---|---|
-| KFI26 | two master accounts (e-mail logins, not recorded in this public repo) | master | must_change = true (temporary password delivered privately) |
+| KFI26 | two master accounts (e-mail logins, not recorded in this public repo) | master | must_change = false (both changed their temporary passwords on 2026-11-10) |
 | TEST | `qa-master@ops.onsitebeta.app` (QA 마스터) | master | test-only; its data and operators were purged after the final test run and its sessions revoked. Remove it together with the TEST event with the SQL below (needs a confirmation in the Supabase tools, so it may still be present) |
 
 ```sql
@@ -260,7 +260,7 @@ merge + null-key deletion, conduct/extra insert, no apps delete, no roster write
 duplicate `k` → 23505 / no update or delete (also for masters); `last_login` only; master-only actions → `forbidden`;
 `reset_op` (old token zero rows + 401 at admin-ops, old password fails, new temp works); `set_disabled` (same token zero
 rows immediately, writes denied, sign-in `user_banned`, re-enable restores); `set_role`; cross-event isolation;
-`delete_op`; `reset_event`; `purge_event`; leaves one active TEST operator. Uses ~7 direct sign-ins per run.
+`delete_op`; `reset_event`; `purge_event`; leaves one active TEST operator (`TEST-S01`; remove it with admin-ops `delete_op` as the QA master, or with the TEST removal SQL below). Uses ~7 direct sign-ins per run.
 
 ## Advisor findings (final)
 

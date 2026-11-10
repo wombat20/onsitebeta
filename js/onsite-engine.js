@@ -143,6 +143,17 @@ function parseTimetable(table){
     seen[r.no]=ln;rows.push(r);
   }
   if(!rows.length&&!errors.length)errors.push('지원자 행이 없어요');
+  /* 조구분이 빈 칸인데 바로 위 사람과 면접실·일차·면접 시각이 같으면 같은 조예요
+     (조구분을 셀 병합한 엑셀을 CSV로 저장하면 아래 칸이 비어요 · 한 면접실에서 같은 시각에 따로 면접할 수는 없어요) */
+  let prevR=null,filled=0;
+  rows.forEach(r=>{if(!r.grp&&prevR&&prevR.grp&&prevR.grp!=='-'&&prevR.room===r.room&&prevR.day===r.day&&prevR.start===r.start&&prevR.end===r.end){r.grp=prevR.grp;filled++;}prevR=r;});
+  if(filled)warns.push(`조구분이 빈 칸인 ${filled}명은 바로 위 사람과 면접실·면접 시각이 같아 같은 조로 넣었어요`);
+  /* 같은 면접실에서 서로 다른 면접의 시간이 겹치면 알려줘요 (겹치면 뒤 면접이 자동으로 밀려 '지연'처럼 보여요) */
+  const byRoom={};rows.forEach(r=>{if(!r.start||!r.end)return;const solo=!r.grp||r.grp==='-';const key=solo?'p:'+r.no:'g:'+r.grp+'@'+r.start;
+    const rk=r.room+'|'+r.day;const m=(byRoom[rk]=byRoom[rk]||{});if(!m[key])m[key]={room:r.room,s:T(r.start),e:T(r.end),who:r.grp&&r.grp!=='-'?r.grp+'조':r.no};});
+  const over=[];Object.values(byRoom).forEach(m=>{const L=Object.values(m).sort((a,b)=>a.s-b.s||a.e-b.e);let last=null;
+    L.forEach(x=>{if(last&&x.s<last.e)over.push(`${x.room} ${HM(last.s)}–${HM(last.e)}(${last.who})와 ${HM(x.s)}–${HM(x.e)}(${x.who})`);if(!last||x.e>last.e)last=x;});});
+  if(over.length)warns.push(`같은 면접실에서 면접 시간이 겹쳐요 ${over.length}건 · 조구분과 시각을 확인해 주세요 (그대로 쓰면 뒤 면접이 자동으로 밀려요) · ${over.slice(0,3).join(' · ')}${over.length>3?` 외 ${over.length-3}건`:''}`);
   const days=[...new Set(rows.map(r=>r.day).filter(Boolean))];if(days.length>1)warns.push(`일차가 ${days.length}개(${days.join(', ')})예요 · 이번 베타는 하루 운영 기준이라 전부 같은 날로 보여요`);
   const g={};rows.forEach(r=>{if(r.grp&&r.grp!=='-'){const k=r.room+'|'+r.grp;(g[k]=g[k]||[]).push(r);}});
   Object.values(g).forEach(L=>{const t=new Set(L.map(r=>r.start+'-'+r.end));if(t.size>1)warns.push(`${L[0].room} ${L[0].grp}조 안에 면접 시각이 서로 달라요 · 시각별로 나눠서 보여요`);});

@@ -80,7 +80,8 @@ try {
   // 4. 운영자: 초대 링크로 접속 → 아이디 자동 입력 → 임시 비밀번호 로그인 → 변경
   await O.goto(`${BASE}/beta-operator.html?ev=TEST&t=10:00#id=${opId}`);
   await O.locator('#lg-id').waitFor({ timeout: 20000 });
-  ok('운영자: 초대 링크로 아이디 자동 입력', (await O.inputValue('#lg-id')) === opId && !(await O.evaluate(() => location.hash)));
+  // 아이디(#id=)는 로그인할 때까지 주소에 남아요 (카카오톡 '다른 브라우저로 열기'에도 아이디가 따라가게) · 로그인하면 지워요
+  ok('운영자: 초대 링크로 아이디 자동 입력(로그인 전까지 주소에 아이디 유지)', (await O.inputValue('#lg-id')) === opId && (await O.evaluate(() => location.hash)) === `#id=${opId}`);
   await O.fill('#lg-pw', temp);
   await O.click('[data-act="login"]');
   await O.locator('#np1').waitFor({ timeout: 20000 });
@@ -89,10 +90,11 @@ try {
   ok('운영자: 규칙에 안 맞는 비밀번호 안내', await O.locator('.ol-err', { hasText: '영문과 숫자' }).waitFor({ timeout: 8000 }).then(() => true, () => false));
   await O.fill('#np1', opPw); await O.fill('#np2', opPw); await O.click('[data-act="pwSave"]');
   ok('운영자: 변경 후 운영보드', await O.locator('#tabbar .tab').first().waitFor({ timeout: 20000 }).then(() => true, () => false));
+  ok('운영자: 로그인 후 주소의 아이디(#id=) 지움', !(await O.evaluate(() => location.hash)));
   await O.click('[data-act="tab"][data-t="list"]');
   ok('운영자: 명단 도착(21명)', await until(O, () => document.querySelectorAll('.prow').length === 21));
   await O.screenshot({ path: path.join(SHOTS_DIR, 'sb-operator-list.png') });
-  ok('마스터: 운영자 상태 사용 중으로', await until(M, () => document.body.textContent.includes('사용 중') && document.body.textContent.includes('본인 변경 완료')));
+  ok('마스터: 운영자 상태 비밀번호 설정 완료 · 접속 중', await until(M, () => document.body.textContent.includes('비밀번호 설정 완료') && document.body.textContent.includes('본인 변경 완료') && document.body.textContent.includes('● 접속 중')));
 
   // 5. 운영자 접수 → 마스터 반영
   const no = nos[0];
@@ -123,8 +125,9 @@ try {
   ok('운영자: 마이에서 비밀번호 변경', await O.locator('.toast', { hasText: '비밀번호를 바꿨어요' }).waitFor({ timeout: 15000 }).then(() => true, () => false));
   opPw = pw2;
 
-  // 9. 사용 중지 → 강제 로그아웃
+  // 9. 사용 중지(확인창) → 강제 로그아웃
   await M.click(`[data-act="opToggle"][data-id="${opId}"]`);
+  await M.click('.modal [data-act="opToggleDo"]');
   ok('사용 중지 → 운영자 로그인 화면(안내)', await O.locator('.ol-err', { hasText: '사용 중지' }).waitFor({ timeout: 25000 }).then(() => true, () => false));
   ok('사용 중지 후 운영자 기기에서 명단 삭제', await O.evaluate(() => !J.ready && !localStorage.getItem(STORE_KEY + ':outbox')));
 
@@ -149,7 +152,7 @@ try {
 
   // 11. 초기화 → 운영자 기록 비움
   await M.click('#nav [data-p="admin"]');
-  await M.click('[data-act="reset"]'); await M.click('.modal [data-act="doReset"]');
+  await M.click('[data-act="reset"]'); await M.fill('#rs-c', '초기화'); await M.click('.modal [data-act="doReset"]');
   ok('마스터 초기화 → 운영자 기록 비움(시간표 유지)', await until(O, n => A(n).status === '' && J.ready, no, 25000));
 
   // 12. 활동 로그 내보내기

@@ -25,9 +25,14 @@ if(!lib||!lib.createClient){
   SYNC.state='error';
   return;
 }
-/* 약한 신호에서 요청이 끝없이 걸려 대기열·동기화가 멈추지 않도록 모든 요청에 제한시간을 둬요 */
+/* 약한 신호에서 요청이 끝없이 걸려 대기열·동기화가 멈추지 않도록 모든 요청에 제한시간을 둬요
+   토큰 갱신만 60초: 갱신 요청을 중간에 끊고 같은 토큰으로 다시 보내면 서버가 재사용으로 보고 로그인을 끊을 수 있어요
+   (로그인·로그아웃·데이터 요청은 20초) */
+const AUTH_TIMEOUT_MS=60000;
 function tfetch(input,init){
-  init=init||{};const c=new AbortController();const t=setTimeout(()=>c.abort(),TIMEOUT_MS);const s=init.signal;
+  init=init||{};const url=String((input&&input.url)||input||'');
+  const refresh=url.includes('/auth/v1/token')&&url.includes('grant_type=refresh_token');
+  const c=new AbortController();const t=setTimeout(()=>c.abort(),refresh?AUTH_TIMEOUT_MS:TIMEOUT_MS);const s=init.signal;
   if(s){if(s.aborted)c.abort();else s.addEventListener('abort',()=>c.abort(),{once:true});}
   return fetch(input,Object.assign({},init,{signal:c.signal})).finally(()=>clearTimeout(t));
 }
@@ -51,6 +56,7 @@ const notice=msg=>{try{if(typeof STORE.onNotice==='function')STORE.onNotice(msg)
 const SKEW_KEY=`onsitebeta:v2:skew`;
 let SKEW=(()=>{try{const v=+localStorage.getItem(SKEW_KEY);return isFinite(v)?v:0;}catch(e){return 0;}})();
 const srvNow=()=>Date.now()+SKEW;
+STORE.srvNow=srvNow;
 function learnSkew(serverIso,t0,t1){const sv=Date.parse(serverIso);if(!isFinite(sv)||t1-t0>5000)return;SKEW=Math.round(sv-(t0+t1)/2);try{localStorage.setItem(SKEW_KEY,String(SKEW));}catch(e){}}
 const idToEmail=id=>{const s=String(id||'').trim();return s.includes('@')?s.toLowerCase():s.toLowerCase()+'@'+CONFIG.OP_EMAIL_DOMAIN;};
 STORE.idToEmail=idToEmail;
@@ -81,7 +87,7 @@ async function callFn(action,body){
 
 /* ---------- 계정 ---------- */
 function toMe(m){return m?{userId:m.user_id,id:m.login_id,eventCode:m.event_code,kind:m.kind,name:m.name,role:m.role||(m.kind==='master'?'마스터':''),phone:m.phone||'',mustChange:!!m.must_change,disabled:!!m.disabled}:null;}
-function toAcc(m,temp){const a={name:m.name,role:m.role||'',phone:m.phone||'',mustChange:!!m.must_change,lastLogin:fmtTs(m.last_login),createdAt:fmtTs(m.created_at),kind:m.kind,userId:m.user_id};if(temp)a.temp=temp;if(m.disabled)a.disabled=true;return a;}
+function toAcc(m,temp){const a={name:m.name,role:m.role||'',phone:m.phone||'',mustChange:!!m.must_change,lastLogin:fmtTs(m.last_login),lastAt:m.last_login||'',createdAt:fmtTs(m.created_at),kind:m.kind,userId:m.user_id};if(temp)a.temp=temp;if(m.disabled)a.disabled=true;return a;}
 const AUTH={me:null,
   async loadMe(){
     const {data:{session}}=await sb.auth.getSession();if(!session)return null;
@@ -120,7 +126,11 @@ const AUTH={me:null,
     replaceDB(emptyDB());
   },
 };
-function touchLogin(){if(!AUTH.me)return;sb.from('members').update({last_login:new Date().toISOString()}).eq('user_id',AUTH.me.userId).then(()=>{},()=>{});}
+/* 최근 접속 시각 · 로그인·처음 불러올 때, 그리고 화면을 쓰는 동안 몇 분마다 (마스터의 '접속 중' 표시용) */
+let lastTouch=0;
+function touchLogin(){if(!AUTH.me||AUTH.me.mustChange||RUN.blocked)return;lastTouch=Date.now();sb.from('members').update({last_login:new Date(srvNow()).toISOString()}).eq('user_id',AUTH.me.userId).then(()=>{},()=>{});}
+const BEAT_MS=4*60*1000;
+function touchBeat(){if(RUN.on&&!document.hidden&&Date.now()-lastTouch>=BEAT_MS-15000)touchLogin();}
 STORE.auth=AUTH;
 
 const ADMIN={
@@ -165,16 +175,24 @@ const OUT={q:[],busy:false,timer:null,backoff:1000,epoch:0,ackAt:{},verify:true,
         else{const ra=r.data&&r.data.reset_at;if(ra){const n=OUT.drop(o=>isStale(o,ra),true);if(n){notice(`초기화 전에 보내지 못한 기록 ${n}건은 반영하지 않았어요`);CUR.since=null;setTimeout(()=>pull(true),0);}}}
       }
       OUT.verify=false;
+      let sent=0;
       while(OUT.q.length){
         const op=OUT.q[0];const r=await send(op);
         if(ep!==OUT.epoch)return;            // 그사이 로그아웃·재로그인됨 → 다른 대기열을 건드리지 않아요
         if(r==='retry'){OUT.verify=true;setNet(false);OUT.kick(OUT.backoff);OUT.backoff=Math.min(OUT.backoff*2,15000);return;}
+        sent++;
+        if(r==='denied'){
+          // 계정이 중지·삭제됐는지 먼저 확인해요 → 그렇다면 로그아웃되고, 남은 기록은 이 기기에 두었다가 다시 로그인하면 보내요
+          await checkMe();
+          if(ep!==OUT.epoch||!AUTH.me)return;
+          notice('서버가 기록 1건을 받지 않았어요 · 화면을 새로고침한 뒤에도 반복되면 채용 담당자에게 알려 주세요');
+        }
         const i=OUT.q.indexOf(op);if(i>=0)OUT.q.splice(i,1);
         const k=OUT.key(op);if(k)OUT.ackAt[k]=Date.now();
         OUT.save();OUT.backoff=1000;
-        if(r==='denied'){checkMe();}
       }
-      setNet(true);
+      // 보낸 게 있을 때만 '연결됨'으로 바꿔요 (보낼 게 없었다면 마지막 동기화 결과를 그대로 둬요)
+      setNet(sent?true:undefined);
     }finally{OUT.busy=false;}
   },
 };
@@ -320,6 +338,7 @@ async function fullLoad(){
   STORE.logsCapped=master&&(lg.data||[]).length>=LOG_INIT;
   checkOwn(d.members);
   if(!AUTH.me)return;
+  STORE.loaded=true;   // 서버에서 한 번이라도 다 받아왔어요 (시간표가 비어 있는지 판단할 수 있음)
   replaceDB(next);
 }
 let pulling=null;
@@ -350,7 +369,7 @@ async function pull(force){
     if(changed){saveLocal();fireDB();}
   })();
   try{await pulling;setNet(true);}
-  catch(e){if(isNetErr(e,e.status))setNet(false);else if(e.status===401){await sb.auth.refreshSession().catch(()=>{});}else console.warn('[onsite] 동기화 오류',e);}
+  catch(e){if(isNetErr(e,e.status))setNet(false);else if(e.status===401){setNet(false);await sb.auth.refreshSession().catch(()=>{});}else{setNet(false);console.warn('[onsite] 동기화 오류',e);}}
   finally{pulling=null;if(again&&RUN.on){again=false;setTimeout(()=>pull(),60);}}
 }
 STORE.pull=pull;
@@ -363,16 +382,22 @@ STORE.loadAllLogs=async function(){
   return all.length;
 };
 
-/* ---------- 연결 상태 ---------- */
-let rtLive=false;
+/* ---------- 연결 상태 ----------
+   netOk: 마지막 서버 요청(동기화·전송)이 성공했는지 · setNet() 처럼 인자 없이 부르면 그 결과로 다시 계산만 해요 */
+let rtLive=false,netOk=false;
 function setNet(ok){
-  const next=!ok?'error':(OUT.q.length&&!OUT.busy?'error':(rtLive?'live':'poll'));
+  const was=netOk;
+  if(ok!==undefined)netOk=!!ok;
+  if(was&&!netOk&&RUN.on)schedule();   // 방금 실패했으면 30초를 기다리지 않고 3초 뒤 다시 확인해요
+  if(SYNC.state==='connecting'&&ok===undefined)return;   // 처음 불러오기가 끝나기 전에는 '연결 중' 유지
+  const next=!netOk?'error':(OUT.q.length&&!OUT.busy?'error':(rtLive?'live':'poll'));
   if(SYNC.state!==next){SYNC.state=next;fireDB();}
 }
 
 /* ---------- 실행 ---------- */
-const RUN={on:false,timer:null,chan:null,blocked:false,release:null};
-function schedule(){clearTimeout(RUN.timer);if(!RUN.on)return;RUN.timer=setTimeout(async()=>{try{await pull();}catch(e){}finally{OUT.kick();schedule();}},rtLive?POLL_SLOW:POLL_FAST);}
+const RUN={on:false,timer:null,chan:null,blocked:false,release:null,lockEp:0,tk:null,beat:null};
+/* 실시간 연결이 살아 있고 마지막 요청이 성공했으면 30초, 아니면 3초마다 확인 (한 번 실패한 뒤 '연결 끊김'이 오래 남지 않게) */
+function schedule(){clearTimeout(RUN.timer);if(!RUN.on)return;RUN.timer=setTimeout(async()=>{try{await pull();}catch(e){}finally{OUT.kick();schedule();}},rtLive&&netOk?POLL_SLOW:POLL_FAST);}
 let deb=null;const soon=()=>{clearTimeout(deb);deb=setTimeout(()=>pull(),250);};
 function subscribe(){
   try{
@@ -384,36 +409,94 @@ function subscribe(){
     ch.subscribe(st=>{
       const was=rtLive;rtLive=st==='SUBSCRIBED';
       if(rtLive&&!was){soon();}
-      if(was!==rtLive){setNet(true);schedule();}
+      if(was!==rtLive){setNet();schedule();}
     });
     RUN.chan=ch;
   }catch(e){rtLive=false;}
 }
-/* 같은 계정을 여러 탭에서 열면 한 탭만 기록을 보내요 (전송 대기열이 서로 덮어쓰지 않게) · 잠금은 탭을 닫으면 풀려요 */
-async function acquireTab(){
-  if(!(navigator.locks&&navigator.locks.request)||!AUTH.me)return true;
-  const name=`onsitebeta:sync:${EV}:${STORE.app}:${AUTH.me.userId}`;
-  return new Promise(res=>{navigator.locks.request(name,{ifAvailable:true},lock=>{if(!lock){res(false);return;}res(true);return new Promise(r=>{RUN.release=r;});}).catch(()=>res(true));});
+/* ---------- 같은 계정을 여러 탭에서 열었을 때 ----------
+   한 탭만 기록해요 (전송 대기열이 서로 덮어쓰지 않게). 나머지 탭은 화면을 가리고 기다리다가
+   앞 탭을 닫으면 자동으로 이어받아요. '이 탭에서 계속 쓰기'를 누르면 바로 가져와요 (앞 탭은 가려져요). */
+const LOCKS=!!(navigator.locks&&navigator.locks.request);
+function lockName(){return `onsitebeta:sync:${EV}:${STORE.app}:${AUTH.me.userId}`;}
+/* mode: 'try'(비어 있으면 바로) | 'wait'(풀릴 때까지 기다림) | 'steal'(가져오기) · 처음 결과(바로 받았는지)를 돌려줘요 */
+function lockReq(mode){
+  const ep=RUN.lockEp;
+  if(RUN.tk){RUN.tk.dead=true;try{RUN.tk.ac&&RUN.tk.ac.abort();}catch(e){}}
+  const tk={dead:false,ac:mode==='wait'?new AbortController():null};RUN.tk=tk;
+  const alive=()=>!tk.dead&&ep===RUN.lockEp&&RUN.on&&!!AUTH.me;
+  return new Promise(res=>{
+    const opts=mode==='try'?{ifAvailable:true}:mode==='steal'?{steal:true}:{signal:tk.ac.signal};
+    let p;
+    try{
+      p=navigator.locks.request(lockName(),opts,lock=>{
+        if(!alive()){res(false);return;}               // 그사이 로그아웃·취소됨 → 받은 잠금은 바로 놓아요
+        if(!lock){res(false);setTimeout(()=>{if(alive())lockReq('wait');},0);return;}
+        tk.granted=true;res(true);becomeLeader(mode!=='try');
+        return new Promise(r=>{RUN.release=r;});
+      });
+    }catch(e){res(true);return;}                        // 잠금을 쓸 수 없는 환경 → 이 탭이 기록해요
+    p.catch(e=>{
+      if(!alive()){res(false);return;}
+      if(tk.granted&&e&&e.name==='AbortError'){
+        // 다른 탭이 '이 탭에서 계속 쓰기'로 가져갔어요 → 이 탭은 기록을 멈추고 다시 기다려요
+        res(false);RUN.release=null;becomeFollower('다른 탭에서 이 계정으로 기록을 시작해서 이 탭은 멈췄어요');lockReq('wait');return;
+      }
+      // 잠금이 동작하지 않는 환경(일부 앱 내 브라우저 등) → 예전처럼 이 탭이 기록해요
+      res(true);if(RUN.blocked)becomeLeader(true);
+    });
+  });
+}
+function becomeLeader(takeover){
+  if(!RUN.blocked&&!takeover)return;
+  const was=RUN.blocked;RUN.blocked=false;STORE.blocked=false;
+  if(was){OUT.load();CUR.since=null;OUT.kick();pull(true);touchLogin();notice('이 탭에서 이어서 기록해요');}
+  showBlocked();fireDB();
+}
+function becomeFollower(msg){
+  RUN.blocked=true;STORE.blocked=true;
+  OUT.epoch++;OUT.q.length=0;STORE.pending=0;clearTimeout(OUT.timer);   // 이 탭의 대기열은 비워요 (기록은 이어받은 탭이 보내요)
+  showBlocked();fireDB();if(msg)notice(msg);
+}
+STORE.takeOver=function(){if(RUN.on&&RUN.blocked&&LOCKS&&AUTH.me)lockReq('steal');};
+/* 가리는 화면 · 두 페이지가 같이 써요 (페이지 스타일과 상관없이 보이도록 인라인 스타일) */
+function showBlocked(){
+  let el=document.getElementById('onsite-blocked');
+  if(!RUN.blocked||!RUN.on){if(el)el.remove();return;}
+  if(el)return;
+  el=document.createElement('div');el.id='onsite-blocked';el.setAttribute('role','alertdialog');el.setAttribute('aria-modal','true');
+  el.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(15,23,42,.72);display:flex;align-items:center;justify-content:center;padding:20px;font-family:inherit';
+  el.innerHTML='<div style="background:#fff;color:#111827;border-radius:16px;max-width:380px;width:100%;padding:22px 20px;box-shadow:0 20px 50px rgba(0,0,0,.3);line-height:1.6">'
+    +'<div style="font-size:17px;font-weight:800;margin-bottom:8px">이 계정은 다른 탭(창)에서 열려 있어요</div>'
+    +'<div style="font-size:14px;color:#4b5563">같은 계정은 한 탭에서만 기록할 수 있어요. 이 탭에서 바꾼 내용은 저장되지 않아요.<br>다른 탭을 닫으면 이 탭에서 자동으로 이어서 쓸 수 있어요.</div>'
+    +'<button type="button" data-onsite-takeover style="margin-top:16px;width:100%;height:46px;border:0;border-radius:12px;background:#2563eb;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">이 탭에서 계속 쓰기</button>'
+    +'<div style="font-size:12.5px;color:#6b7280;margin-top:10px">누르면 다른 탭은 기록이 멈추고 이 화면처럼 가려져요</div></div>';
+  el.querySelector('[data-onsite-takeover]').addEventListener('click',()=>STORE.takeOver());
+  document.body.appendChild(el);
 }
 async function startSync(){
-  if(RUN.on)return;RUN.on=true;
-  RUN.blocked=!(await acquireTab());STORE.blocked=RUN.blocked;
-  if(RUN.blocked)notice('이 계정은 다른 탭에서 이미 열려 있어요 · 이 탭은 보기만 되고 기록은 저장되지 않아요 · 그 탭을 써 주세요');
+  if(RUN.on)return;RUN.on=true;RUN.lockEp++;
+  RUN.blocked=false;STORE.blocked=false;
+  if(LOCKS&&AUTH.me){const got=await lockReq('try');if(!RUN.on)return;if(!got){RUN.blocked=true;STORE.blocked=true;}}
   if(typeof DB.resetAt==='string')CUR.resetAt=DB.resetAt;   // 오프라인으로 시작해도 마지막으로 본 초기화 시각을 기억
-  OUT.load();
+  if(RUN.blocked){OUT.q.length=0;STORE.pending=0;}else OUT.load();
+  showBlocked();
   SYNC.state='connecting';fireDB();
   try{await fullLoad();setNet(true);touchLogin();}catch(e){setNet(false);console.warn('[onsite] 처음 불러오기 실패',e);}
+  if(!RUN.on)return;
   subscribe();schedule();OUT.kick();
+  clearInterval(RUN.beat);RUN.beat=setInterval(touchBeat,60000);
 }
 function stopSync(){
-  RUN.on=false;clearTimeout(RUN.timer);clearTimeout(OUT.timer);
-  if(RUN.release){try{RUN.release();}catch(e){}RUN.release=null;}RUN.blocked=false;STORE.blocked=false;
+  RUN.on=false;RUN.lockEp++;clearTimeout(RUN.timer);clearTimeout(OUT.timer);clearInterval(RUN.beat);RUN.beat=null;
+  if(RUN.tk){RUN.tk.dead=true;try{RUN.tk.ac&&RUN.tk.ac.abort();}catch(e){}RUN.tk=null;}
+  if(RUN.release){try{RUN.release();}catch(e){}RUN.release=null;}RUN.blocked=false;STORE.blocked=false;showBlocked();
   if(RUN.chan){try{sb.removeChannel(RUN.chan);}catch(e){}RUN.chan=null;}
-  rtLive=false;CUR.since=null;CUR.logAfter=0;CUR.rosterV=null;CUR.rosterU=null;CUR.resetAt=null;
+  rtLive=false;netOk=false;STORE.loaded=false;CUR.since=null;CUR.logAfter=0;CUR.rosterV=null;CUR.rosterU=null;CUR.resetAt=null;
 }
 /* 전자기기 보관번호를 서버에서 배정받아요 (동시에 접수해도 겹치지 않음) · 실패하면 null */
 STORE.assignDevice=async function(no){
-  if(!navigator.onLine||RUN.blocked||SYNC.state==='error')return null;     // 연결이 불안하면 바로 이 기기에서 배정
+  if(!navigator.onLine||RUN.blocked)return null;     // 오프라인이면 바로 이 기기에서 배정 · 그 밖에는 4초까지 서버에 물어봐요
   try{
     const c=new AbortController();const t=setTimeout(()=>c.abort(),4000);
     const r=await sb.rpc('assign_device',{p_ev:EV,p_no:no}).abortSignal(c.signal);clearTimeout(t);
@@ -450,6 +533,9 @@ STORE.boot=async function(){
       if(!navigator.onLine||isRetryableAuth(gs.error)){const m=cachedMe(storedUserId());if(m){AUTH.me=m;startSync();return {authed:true,me:m,offline:true};}}
       return {authed:false};
     }
+    // 저장된 화면이 있으면 바로 열고 서버 확인은 뒤에서 해요 (신호가 약해도 첫 화면이 늦지 않게)
+    // 계정이 중지·삭제·재발급됐으면 첫 동기화(checkOwn)에서 바로 로그아웃돼요
+    if(cm&&gs.data.session.user&&gs.data.session.user.id===cm.userId&&(STORE.app!=='master'||cm.kind==='master')){AUTH.me=cm;startSync();return {authed:true,me:cm};}
     const me=await AUTH.loadMe();
     if(!me)return {authed:false};
     if(me.eventCode!==EV||me.disabled||me.mustChange||(STORE.app==='master'&&me.kind!=='master')){await sb.auth.signOut({scope:'local'}).catch(()=>{});AUTH.me=null;return {authed:false};}
@@ -463,12 +549,20 @@ STORE.boot=async function(){
   }
 };
 
+/* 같은 브라우저의 다른 탭에서 다른 계정으로 로그인하면 (로그인 정보는 브라우저에 하나만 저장돼요)
+   이 탭은 서버에 알리지 않고 이 탭만 로그아웃해요 → 다른 사람 이름으로 기록되는 일을 막아요 */
+async function localKick(msg){
+  if(kicking)return;kicking=true;
+  try{stopSync();AUTH.me=null;OUT.epoch++;OUT.q.length=0;STORE.pending=0;DB=emptyDB();fireDB();}finally{kicking=false;}
+  if(typeof STORE.onKicked==='function')STORE.onKicked(msg);
+}
 // 이 콜백 안에서 supabase 함수를 바로 부르면 잠금 때문에 멈출 수 있어 다음 틱으로 미뤄요
-sb.auth.onAuthStateChange((event)=>{
-  if(event!=='SIGNED_OUT')return;
-  setTimeout(()=>{if(AUTH.me&&!kicking)kick('로그인이 만료됐어요 · 다시 로그인해 주세요');},0);
+sb.auth.onAuthStateChange((event,session)=>{
+  if(event==='SIGNED_OUT'){setTimeout(()=>{if(AUTH.me&&!kicking)kick('로그인이 만료됐어요 · 다시 로그인해 주세요');},0);return;}
+  const uid=session&&session.user&&session.user.id;
+  if(uid&&AUTH.me&&uid!==AUTH.me.userId){const mine=AUTH.me.userId;setTimeout(()=>{if(AUTH.me&&AUTH.me.userId===mine)localKick('이 브라우저의 다른 탭에서 다른 계정으로 로그인해서 이 탭은 로그아웃됐어요');},0);}
 });
 window.addEventListener('online',()=>{OUT.verify=true;OUT.kick();pull();schedule();});
 window.addEventListener('offline',()=>{OUT.verify=true;setNet(false);});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&RUN.on){pull();OUT.kick();schedule();}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&RUN.on){pull();OUT.kick();schedule();touchBeat();}});
 })();

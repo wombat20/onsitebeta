@@ -16,13 +16,14 @@
 ## 한 번에
 
 ```sh
-node tests/run-local.mjs        # static-check → golden-check → e2e-local
+node tests/run-local.mjs        # static-check → parser-check → golden-check → e2e-local
 ```
 
 ## 하나씩
 
 ```sh
 node tests/static-check.mjs     # node --check (js/*.js · 인라인 <script>) · 금지어 · 비밀값 검사
+node tests/parser-check.mjs     # 시간표 파서: 빈 조구분(셀 병합 → CSV) 채우기 · 같은 면접실 시간 겹침 경고
 node tests/golden-check.mjs     # 새 엔진 계산 == tests/golden/golden.json (마스터·운영자 둘 다)
 node tests/e2e-local.mjs        # 로컬 모드 화면 흐름 (마스터 ↔ 운영자 · 시간표 링크)
 ```
@@ -56,6 +57,7 @@ node tests/e2e-local.mjs        # 로컬 모드 화면 흐름 (마스터 ↔ 운
 9. 운영자 DELAY 스테퍼·입실/퇴실·비고·알림·테스트 시각 → 마스터 반영
 10. 마스터 운영자 초대(로컬 안내)·베타 관리(로그아웃·비밀번호 숨김) · 현장 기록 CSV
 11. 마스터 '운영자에게 시간표 보내기' 링크 → 컨텍스트 B 에서 열면 시간표 21명 · 주소의 `#` 제거 · 잘못된 링크 안내
+- 추가: 마스터 한글 검색(IME 조합을 CDP 로 흉내) · 검색창에 커서가 있어도 현장 현황 갱신 · 운영자 검색 중 명단만 갱신(검색창 유지) · 한글 엑셀 CSV(CP949) 읽기 · 초기화는 확인란에 '초기화' 입력해야 실행
 12. 마스터 초기화 → 기록만 지우고 시간표 유지 · 운영자 반영
 13. `beta-master (2).html` → `beta-master.html` 이동(쿼리·해시 유지)
 14. `CONFIG.SB_URL` 을 채운 경우(온라인 모듈 없이): 로그인 화면·앱별 저장 키·`#tt=` 무시 · `?local=1` 이면 로컬 + 링크에 `local=1`
@@ -73,16 +75,13 @@ node tests/fixtures/make-fixtures.mjs
   머리글 `준비실 이동\n(3면접실: 인성검사 안내)`, xlsx 면접실 열 병합, 1행 제목, 연락처 없는 지원자 1명, 집결 빈칸 1명
 - `timetable-broken.*`: 면접시작 열 없음
 
-## 온라인 모드
-`e2e-sb-store.mjs` 는 실제 Supabase 를 쓰는 별도 테스트예요(자격 증명은 저장소 밖 `ONSITE_SCRATCH/secrets/`).
-
 ## 온라인 모드 (실제 Supabase · TEST 행사)
 
 실제 서버의 **TEST 행사**만 써요(실제 행사 KFI26 데이터와 분리). QA 마스터 계정은 저장소 밖 `ONSITE_SCRATCH/secrets/qa.json` 에서 읽어요. 이 파일이 없으면 실행할 수 없어요.
 
 ```sh
-node tests/e2e-sb-store.mjs     # 저장 계층만: 로그인·계정 생성·첫 비밀번호 변경·양방향 동기화·동시 수정 병합·오프라인 재전송·초기화·사용 중지 (37개)
-node tests/e2e-sb-ui.mjs        # 실제 화면: 마스터 PC + 운영자 휴대폰(iPhone 13) 전체 흐름 (37개)
+node tests/e2e-sb-store.mjs     # 저장 계층만: 로그인·계정 생성·첫 비밀번호 변경·양방향 동기화·동시 수정 병합·오프라인 재전송·다른 탭 가림/이어받기·서버 불통 표시·초기화·사용 중지 (55개)
+node tests/e2e-sb-ui.mjs        # 실제 화면: 마스터 PC + 운영자 휴대폰(iPhone 13) 전체 흐름 · 접속 중 표시 · 사용 중지 확인창 (38개)
 node supabase/tests/api_e2e.mjs # 서버 API 직접 호출 (74개) · SECRETS_DIR 필요
 ```
 
@@ -90,4 +89,6 @@ node supabase/tests/api_e2e.mjs # 서버 API 직접 호출 (74개) · SECRETS_DI
 - 로그인 시도 제한(같은 IP 5분 30회 수준)이 있어서 연달아 여러 번 돌리면 잠시 실패할 수 있어요.
 - 권한 매트릭스: `supabase/tests/rls_matrix.sql` 을 SQL Editor(또는 MCP execute_sql)에서 실행 · 항상 ROLLBACK 돼요.
 
-> 마지막 검증(2026-11-10) 뒤 TEST 행사의 데이터와 운영자 계정은 지웠어요. 온라인 테스트를 다시 돌리려면 TEST 행사와 QA 마스터를 다시 만들어야 해요(`supabase/README.md` 의 admin-ops `bootstrap` 참고).
+- Node 의 fetch 가 프록시를 거쳐야 하는 환경이면 `NODE_USE_ENV_PROXY=1` 을 붙여 실행해요.
+
+> TEST 행사와 QA 마스터는 아직 서버에 있어요. 화면·저장 계층 테스트는 끝나면 운영자 계정과 기록을 스스로 지우고, `api_e2e.mjs` 는 TEST 운영자 하나(`TEST-S01`)를 남겨요. 행사가 끝난 뒤 `supabase/README.md` 의 SQL 로 지우세요. 지운 뒤 다시 돌리려면 admin-ops `bootstrap` 으로 다시 만들어야 해요.

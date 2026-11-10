@@ -413,10 +413,10 @@ svg.i.ph{fill:currentColor;stroke:none;}
 <div class="shield-ov"><div class="box"><b>화면 보호 중</b>개인정보 보호를 위한 자동 가림 · 창 복귀 시 해제</div></div>
 
 <script>window.ONSITE_APP='master';</script>
-<script src="js/onsite-engine.js?v=3"></script>
-<script src="js/onsite-store.js?v=3"></script>
+<script src="js/onsite-engine.js?v=4"></script>
+<script src="js/onsite-store.js?v=4"></script>
 <script src="vendor/supabase-2.118.0.js"></script>
-<script src="js/onsite-sb.js?v=3"></script>
+<script src="js/onsite-sb.js?v=4"></script>
 <script>
 const LOGO=`<svg class="logo-svg" role="img" aria-label="ONSITE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 479.40 100"><g transform="translate(0 4) scale(0.17969)"><rect width="512" height="512" rx="139" fill="#2466E0"/><g transform="translate(256 256) scale(1.75) translate(-88.3 -80)"><circle cx="60" cy="80" r="40" fill="none" stroke="#FFFFFF" stroke-width="34"/><path d="M88.3 51.7 L143.9 107.3 Q156.6 120 156.6 102 L156.6 40" fill="none" stroke="#FFFFFF" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/></g></g><g fill="#0F1E45" transform="translate(116 85.30)"><path transform="translate(0.00 0) scale(0.10000 -0.10000)" d="M424 -12C640 -12 797 151 797 350V352C797 551 642 712 426 712C210 712 53 549 53 350V348C53 149 208 -12 424 -12ZM426 130C302 130 214 230 214 350V352C214 472 300 570 424 570C548 570 636 470 636 350V348C636 228 550 130 426 130Z"/><path transform="translate(79.00 0) scale(0.10000 -0.10000)" d="M84 70C84 27 117 -6 160 -6C203 -6 236 27 236 70V445L544 41C565 14 587 -4 624 -4H629C672 -4 706 30 706 73V630C706 673 673 706 630 706C587 706 554 673 554 630V269L257 659C236 686 214 704 177 704H161C118 704 84 670 84 627Z"/><path transform="translate(152.00 0) scale(0.10000 -0.10000)" d="M333 -10C484 -10 590 68 590 207V209C590 331 510 381 368 419C247 451 217 464 217 511V513C217 548 247 574 307 574C355 574 403 558 454 527C467 520 480 516 493 516C533 516 565 547 565 587C565 618 548 637 531 648C467 688 394 710 309 710C165 710 64 626 64 499V497C64 359 154 318 296 283C413 254 437 233 437 194V192C437 151 400 126 336 126C268 126 210 150 157 189C146 196 133 203 113 203C73 203 41 172 41 132C41 108 53 86 70 74C149 18 241 -10 333 -10Z"/><path transform="translate(210.00 0) scale(0.10000 -0.10000)" d="M91 71C91 28 125 -6 168 -6C211 -6 245 28 245 71V629C245 672 211 706 168 706C125 706 91 672 91 629Z"/><path transform="translate(237.60 0) scale(0.10000 -0.10000)" d="M247 71C247 28 281 -6 324 -6C367 -6 401 28 401 71V558H549C588 558 620 590 620 629C620 668 588 700 549 700H99C60 700 28 668 28 629C28 590 60 558 99 558H247Z"/><path transform="translate(296.40 0) scale(0.10000 -0.10000)" d="M554 0C593 0 623 29 623 68C623 107 593 137 554 137H237V284H504C543 284 573 313 573 352C573 391 543 421 504 421H237V563H549C588 563 618 592 618 631C618 670 588 700 549 700H161C118 700 84 666 84 623V77C84 34 118 0 161 0Z"/></g></svg>`;
 const IC={"clip": "<path d=\"M168,152a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,152Zm-8-40H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16Zm56-64V216a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V48A16,16,0,0,1,56,32H92.26a47.92,47.92,0,0,1,71.48,0H200A16,16,0,0,1,216,48ZM96,64h64a32,32,0,0,0-64,0ZM200,48H173.25A47.93,47.93,0,0,1,176,64v8a8,8,0,0,1-8,8H88a8,8,0,0,1-8-8V64a47.93,47.93,0,0,1,2.75-16H56V216H200Z\"/>", "down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z\"/>", "back": "<path d=\"M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z\"/>", "send": "<path d=\"M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.49,29.8L102,154l41.3,84.87A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14,0-.07-40.06-82.3,48-48a8,8,0,0,0-11.31-11.31l-48,48L24.08,98.25l-.07,0,.14,0L216,40Z\"/>", "arrow": "<path d=\"M221.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>", "clock": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z\"/>", "download": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z\"/>", "chev": "<path d=\"M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "users": "<path d=\"M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z\"/>", "trash": "<path d=\"M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z\"/>", "check": "<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>", "gear": "<path d=\"M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.88,25a8,8,0,0,0-6.47-.6A112.1,112.1,0,0,0,54.73,45.15a8,8,0,0,0-2.83,6.07l-.15,33.65-29.83,17a8,8,0,0,0-3.89,5.4,106.47,106.47,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.12,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.57-.42,112.1,112.1,0,0,0,36.68-20.73,8,8,0,0,0,2.83-6.07l.15-33.65,29.83-17a8,8,0,0,0,3.89-5.4A106.47,106.47,0,0,0,237.94,107.21Zm-15,34.91-28.57,16.25a8,8,0,0,0-3,3c-.58,1-1.19,2.06-1.81,3.06a7.94,7.94,0,0,0-1.22,4.21l-.15,32.25a95.89,95.89,0,0,1-25.37,14.3L134,199.13a8,8,0,0,0-3.91-1h-.19c-1.21,0-2.43,0-3.64,0a8.08,8.08,0,0,0-4.1,1l-28.84,16.1A96,96,0,0,1,67.88,201l-.11-32.2a8,8,0,0,0-1.22-4.22c-.62-1-1.23-2-1.8-3.06a8.09,8.09,0,0,0-3-3.06l-28.6-16.29a90.49,90.49,0,0,1,0-28.26L61.67,97.63a8,8,0,0,0,3-3c.58-1,1.19-2.06,1.81-3.06a7.94,7.94,0,0,0,1.22-4.21l.15-32.25a95.89,95.89,0,0,1,25.37-14.3L122,56.87a8,8,0,0,0,4.1,1c1.21,0,2.43,0,3.64,0a8.08,8.08,0,0,0,4.1-1l28.84-16.1A96,96,0,0,1,188.12,55l.11,32.2a8,8,0,0,0,1.22,4.22c.62,1,1.23,2,1.8,3.06a8.09,8.09,0,0,0,3,3.06l28.6,16.29A90.49,90.49,0,0,1,222.9,142.12Z\"/>", "alert": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>", "logout": "<path d=\"M120,216a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V40a8,8,0,0,1,8-8h64a8,8,0,0,1,0,16H56V208h56A8,8,0,0,1,120,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L204.69,120H112a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,229.66,122.34Z\"/>", "flag": "<path d=\"M42.76,50A8,8,0,0,0,40,56V224a8,8,0,0,0,16,0V179.77c26.79-21.16,49.87-9.75,76.45,3.41,16.4,8.11,34.06,16.85,53,16.85,13.93,0,28.54-4.75,43.82-18a8,8,0,0,0,2.76-6V56A8,8,0,0,0,218.76,50c-28,24.23-51.72,12.49-79.21-1.12C111.07,34.76,78.78,18.79,42.76,50ZM216,172.25c-26.79,21.16-49.87,9.74-76.45-3.41-25-12.35-52.81-26.13-83.55-8.4V59.79c26.79-21.16,49.87-9.75,76.45,3.4,25,12.35,52.82,26.13,83.55,8.4Z\"/>", "edit": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "spark": "<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>", "won": "<path d=\"M240,128H217.89l21.52-53a8,8,0,1,0-14.82-6l-24,59H159.38l-24-59a8,8,0,0,0-14.82,0l-24,59H55.38l-24-59a8,8,0,0,0-14.82,6l21.52,53H16a8,8,0,0,0,0,16H44.61l24,59a8,8,0,0,0,14.82,0l24-59h41.24l24,59a8,8,0,0,0,14.82,0l24-59H240a8,8,0,0,0,0-16ZM76,178.75,61.88,144H90.12ZM113.88,128,128,93.26,142.12,128ZM180,178.75,165.88,144h28.24Z\"/>", "x": "<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "lock": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z\"/>", "plus": "<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>", "cal": "<path d=\"M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Z\"/>", "eye": "<path d=\"M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z\"/>", "upload": "<path d=\"M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z\"/>", "search": "<path d=\"M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z\"/>", "image": "<path d=\"M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z\"/>", "grid": "<path d=\"M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z\"/>"};
@@ -515,6 +515,7 @@ function monRows(room,q,now){
 }
 function needRoster(title,desc){
   if(!LOCAL&&SYNC.state==='connecting')return `<div class="phead"><div><h1>${title}</h1><p>${desc}</p></div><div class="pr">${headRight()}</div></div><div class="empty" style="padding:56px 16px">${ic('cal')}<div style="margin-top:8px;font-size:15px;color:var(--tx);font-weight:700">시간표를 불러오는 중이에요…</div></div>`;
+  if(!LOCAL&&SYNC.state==='error'&&!STORE.loaded)return `<div class="phead"><div><h1>${title}</h1><p>${desc}</p></div><div class="pr">${headRight()}</div></div><div class="empty" style="padding:56px 16px">${ic('alert')}<div style="margin-top:8px;font-size:15px;color:var(--tx);font-weight:700">서버에 연결하지 못해 시간표를 불러오지 못했어요</div><div class="mt8">연결되면 자동으로 보여요 · 계속 안 되면 RUNBOOK의 비상 절차(주소 뒤에 ?local=1)를 따라 주세요</div></div>`;
   const oc=onlineCacheInfo();
   if(oc)return `<div class="phead"><div><h1>${title}</h1><p>${desc}</p></div><div class="pr">${headRight()}</div></div>
   <div class="callout warn">${ic('alert')}<span><b>비상 로컬 모드</b> · 이 PC에 온라인 모드에서 마지막으로 받은 시간표(${oc.n}명${oc.at?` · ${esc(oc.at)}`:''})와 현장 기록이 남아 있어요 · 가져오면 이 PC에서 이어서 쓸 수 있어요 (다른 기기와는 연동되지 않아요)</span></div>
@@ -522,15 +523,19 @@ function needRoster(title,desc){
   return `<div class="phead"><div><h1>${title}</h1><p>${desc}</p></div><div class="pr">${headRight()}</div></div>
   <div class="empty" style="padding:56px 16px">${ic('cal')}<div style="margin-top:8px;font-size:15px;color:var(--tx);font-weight:700">아직 시간표가 없어요</div><div class="mt8">시간표 메뉴에서 면접 시간표 엑셀을 올리면 바로 시작할 수 있어요</div><div class="mt16"><button class="btn pri" data-act="page" data-p="sched">${ic('upload','s14')}시간표 올리러 가기</button></div></div>`;
 }
+const delayTxt=d=>d>0?`<b style="color:var(--err)">+${d}분</b>`:d<0?`<b style="color:var(--ok)">${d}분</b>`:'정시';
+/* 현장 운영 표의 본문 · 검색할 때는 이 부분만 바꿔요 (검색창을 다시 그리지 않아 한글 입력이 깨지지 않아요) */
+function monBody(q,now){
+  const body=S.monRoom==='all'
+    ?J.sched.rooms.map(rm=>{const h=monRows(rm,q,now);return h.trim()?`<tr class="roomh"><td colspan="${COLS.length}">${esc(rm.name)} <span class="faint" style="font-weight:600;font-size:12.5px;margin-left:6px">누적 지연 ${delayTxt(roomDelay(rm))}</span></td></tr>`+h:'';}).join('')
+    :monRows(J.sched.rooms[S.monRoom],q,now);
+  return body.trim()?body:`<tr><td colspan="${COLS.length}" class="faint" style="padding:30px;text-align:center">검색 결과 없음</td></tr>`;
+}
 function pgMonitor(){
   if(!J.ready)return needRoster('현장 운영','면접실별 접수·입퇴실·지연 현황 · 운영관리자 모바일과 같은 데이터');
   const now=nowMin();const all=R();const st=k=>all.filter(r=>A(r.no).status===k).length;
   const late=lateConduct(now);const q=S.monQ.trim();
   if(S.monRoom!=='all'&&!J.sched.rooms[S.monRoom])S.monRoom=0;
-  const delayTxt=d=>d>0?`<b style="color:var(--err)">+${d}분</b>`:d<0?`<b style="color:var(--ok)">${d}분</b>`:'정시';
-  const body=S.monRoom==='all'
-    ?J.sched.rooms.map(rm=>{const h=monRows(rm,q,now);return h.trim()?`<tr class="roomh"><td colspan="${COLS.length}">${esc(rm.name)} <span class="faint" style="font-weight:600;font-size:12.5px;margin-left:6px">누적 지연 ${delayTxt(roomDelay(rm))}</span></td></tr>`+h:'';}).join('')
-    :monRows(J.sched.rooms[S.monRoom],q,now);
   const room=S.monRoom==='all'?null:J.sched.rooms[S.monRoom];
   const logs=logList().slice(0,14);
   const cl=conductList();
@@ -551,8 +556,8 @@ function pgMonitor(){
     <span class="faint" style="font-size:12.5px;margin-left:8px">${room?`누적 지연 ${delayTxt(roomDelay(room))} · 입력 DELAY 합 ${sum(sessions(room,true).map(x=>x.delay))}분`:J.sched.rooms.map(rm=>`${esc(rm.name)} ${delayTxt(roomDelay(rm))}`).join(' · ')}</span>
     <span class="sp"></span><div class="search" style="width:240px">${ic('search','s14')}<input class="input" placeholder="이름·수험번호·면접번호 검색" data-inp="monQ" value="${esc(q)}"></div>
   </div>
-  <div class="tbl-wrap secure wm"><div class="tbl"><table class="board" style="min-width:1320px"><thead><tr>${COLS.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>
-  ${body.trim()?body:`<tr><td colspan="${COLS.length}" class="faint" style="padding:30px;text-align:center">검색 결과 없음</td></tr>`}
+  <div class="tbl-wrap secure wm"><div class="tbl"><table class="board" style="min-width:1320px"><thead><tr>${COLS.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody id="mon-body">
+  ${monBody(q,now)}
   </tbody></table></div></div>
   <div class="note">지연(DELAY)을 입력하면 같은 면접실의 이후 일정이 자동으로 밀려요 · 점심처럼 긴 빈 시간은 지연을 흡수 · 집결 시각과 순서는 그대로 · 조별 면접 불참 시 해당 조 시간 자동 단축</div>
 
@@ -619,7 +624,10 @@ function loadXLSX(){
 function handleFile(f){
   if(!f)return;
   const go=(table,name)=>{const res=parseTimetable(table);showPreview(res,name);};
-  if(/\.csv$/i.test(f.name)){const r=new FileReader();r.onload=()=>go(parseCSV(String(r.result).replace(/^﻿/,'')),f.name);r.readAsText(f,'utf-8');return;}
+  if(/\.csv$/i.test(f.name)){const r=new FileReader();r.onload=()=>{const buf=r.result;let txt;
+      // 한글 엑셀의 기본 'CSV (쉼표로 분리)'는 CP949(EUC-KR)로 저장돼요 → UTF-8 로 읽을 수 없으면 그걸로 다시 읽어요
+      try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){try{txt=new TextDecoder('euc-kr').decode(buf);}catch(_){txt=new TextDecoder('utf-8').decode(buf);}}
+      go(parseCSV(txt.replace(/^\ufeff/,'')),f.name);};r.readAsArrayBuffer(f);return;}
   if(!/\.xls[xm]?$/i.test(f.name)){toast('엑셀(.xlsx) 또는 CSV 파일만 올릴 수 있어요',true);return;}
   toast('엑셀을 읽는 중…');
   loadXLSX().then(X=>{const r=new FileReader();r.onload=()=>{try{const wb=X.read(r.result,{type:'array'});
@@ -643,7 +651,7 @@ function showPreview(res,file,sheet){
 }
 function applyTT(){
   if(!PENDING)return;const {res,file}=PENDING;PENDING=null;
-  dbSet('roster',{v:Date.now(),file,at:stamp(),by:ME.name,labels:res.labels||{},rows:res.rows});
+  if(dbSet('roster',{v:Date.now(),file,at:stamp(),by:ME.name,labels:res.labels||{},rows:res.rows})===false){closeModal();toast('저장하지 못했어요 · 이 계정이 다른 탭에서 열려 있어요',true);return;}
   addLog(WHO,`시간표 업로드 · ${file} · ${res.rows.length}명`);closeModal();pending=false;TOKEN.v=null;render();toast(`시간표 적용 · ${res.rows.length}명`);
 }
 function sampleXlsx(){
@@ -651,7 +659,7 @@ function sampleXlsx(){
     const H=FORMAT.map(f=>f[0]);H[6]='준비실 이동\n(3면접실: 인성검사 안내)';H[7]='준비 시작\n(3면접실: 인성검사 시작)';
     const tm=s=>({t:'n',v:T(s)/1440,z:'hh:mm'});
     const ex=[['B01-00001','1면접실','1일차','B1','B1-1','09:20','09:30','09:40','09:55','10:00','10:25','홍길동','일반경쟁_일반직 6급_소방용품 시험검사(소화)','010-0000-0001','010-0000-1001'],
-      ['B01-00002','','','','B1-2','09:20','09:30','09:40','09:55','10:00','10:25','김예시','일반경쟁_일반직 6급_소방용품 시험검사(소화)','010-0000-0002',''],
+      ['B01-00002','','','B1','B1-2','09:20','09:30','09:40','09:55','10:00','10:25','김예시','일반경쟁_일반직 6급_소방용품 시험검사(소화)','010-0000-0002',''],
       ['B01-00003','','','B2','B2-1','09:50','10:00','10:10','10:25','10:30','10:55','이샘플','일반경쟁_일반직 6급_소방용품 시험검사(기계)','010-0000-0003',''],
       ['C01-00001','3면접실','1일차','-','C-1','09:40','09:50','10:00','10:30','10:35','10:55','박개인','제한경쟁_연구직 책임연구원_소방기술 연구','010-0000-0004','']];
     const ws=X.utils.aoa_to_sheet([['면접시간표'],H]);
@@ -678,7 +686,14 @@ async function ttShare(){
 /* =====================================================================
    운영자 초대
    ===================================================================== */
-function opState(o){if(o.disabled)return['사용 중지','mute'];if(o.mustChange)return['초대됨 · 첫 로그인 전',''];return['사용 중','ok'];}
+function opState(o){if(o.disabled)return['사용 중지','mute'];if(o.mustChange)return['초대됨 · 첫 로그인 전',''];return['비밀번호 설정 완료','ok'];}
+/* 접속 표시 · 화면을 켜 둔 기기는 4분마다 서버에 알려요 → 6분 안이면 '접속 중' (휴대폰 화면이 꺼져 있으면 마지막 시각만 보여요) */
+function seenTag(a){
+  if(!a||!a.lastAt)return '';const t=Date.parse(a.lastAt);if(!isFinite(t))return '';
+  const now=STORE.srvNow?STORE.srvNow():Date.now();
+  if(now-t<6*60000)return `<div style="font-size:11.5px;margin-top:2px;color:var(--ok);font-weight:700">● 접속 중</div>`;
+  return `<div class="faint" style="font-size:11.5px;margin-top:2px">최근 접속 ${esc(a.lastLogin||'')}</div>`;
+}
 function pgPeople(){
   if(LOCAL)return pgPeopleLocal();
   const L=opList();const active=L.filter(o=>!o.disabled);
@@ -686,17 +701,18 @@ function pgPeople(){
     <div class="pr"><button class="btn pri" data-act="opAdd">${ic('plus','s14')}운영자 초대</button></div></div>
   <div class="kpis"><div class="kpi"><div class="lb">운영자</div><div class="vl">${active.length}<small>명</small></div></div>
     <div class="kpi"><div class="lb">첫 로그인 전</div><div class="vl">${active.filter(o=>o.mustChange).length}<small>명</small></div></div>
-    <div class="kpi"><div class="lb">사용 중</div><div class="vl">${active.filter(o=>!o.mustChange).length}<small>명</small></div></div></div>
+    <div class="kpi"><div class="lb">비밀번호 설정 완료</div><div class="vl">${active.filter(o=>!o.mustChange).length}<small>명</small></div></div>
+    <div class="kpi"><div class="lb">지금 접속 중</div><div class="vl">${active.filter(o=>/접속 중/.test(seenTag(o))).length}<small>명</small></div></div></div>
   <div class="callout pri">${ic('info')}<span><b>초대 방법</b> · 초대하면 운영자 화면 주소·아이디·임시 비밀번호가 담긴 안내문이 만들어져요 · 운영자는 휴대폰에서 주소를 열어 임시 비밀번호로 로그인하고 새 비밀번호를 정해요 · 시간표는 로그인하면 자동으로 보여요</span></div>
   ${L.length?`<div class="tbl"><table><thead><tr><th>이름</th><th>역할</th><th>연락처</th><th>아이디</th><th>임시 비밀번호</th><th>상태</th><th></th></tr></thead><tbody>
   ${L.map(o=>{const[st,tone]=opState(o);return `<tr><td class="strong">${esc(o.name)}</td>
     <td><select class="select sm" data-oprole="${esc(o.id)}" style="width:86px">${OP_ROLES.map(r=>`<option ${o.role===r?'selected':''}>${r}</option>`).join('')}</select></td>
     <td class="muted num">${esc(o.phone||'—')}</td><td class="num strong mono">${esc(o.id)}</td>
     <td class="mono">${o.mustChange&&o.temp?esc(o.temp):`<span class="faint" style="font-family:inherit">${o.mustChange?'재발급 필요':'본인 변경 완료'}</span>`}</td>
-    <td><span class="st ${tone}">${st}</span>${o.lastLogin?`<div class="faint" style="font-size:11.5px;margin-top:2px">최근 접속 ${esc(o.lastLogin)}</div>`:''}</td>
+    <td><span class="st ${tone}">${st}</span>${seenTag(o)}</td>
     <td class="r" style="white-space:nowrap">${o.disabled?'':`<button class="btn xs ${o.mustChange?'pri':''}" data-act="opInvite" data-id="${esc(o.id)}" ${o.mustChange&&o.temp?'':'disabled'}>안내문</button> `}<button class="btn xs ghost" data-act="opReset" data-id="${esc(o.id)}">비밀번호 재발급</button> <button class="btn xs ghost" data-act="opToggle" data-id="${esc(o.id)}">${o.disabled?'다시 사용':'사용 중지'}</button> <button class="btn xs ghost danger" data-act="opDel" data-id="${esc(o.id)}">삭제</button></td></tr>`;}).join('')}
   </tbody></table></div>`:`<div class="empty">아직 초대한 운영자가 없어요<div class="mt12"><button class="btn sm pri" data-act="opAdd">${ic('plus','s14')}첫 운영자 초대</button></div></div>`}
-  <div class="note" style="line-height:1.7">사용 중지·재발급·삭제·역할 변경은 운영자 휴대폰에 바로 적용돼요 · 재발급하면 그 휴대폰은 바로 로그아웃되니 새 안내문을 보내 주세요<br>운영자 화면 주소: <span class="mono">${esc(OP_URL)}</span></div>
+  <div class="note" style="line-height:1.7">'접속 중'은 최근 몇 분 안에 운영자 화면이 켜져 있었다는 뜻이에요 · 휴대폰 화면이 꺼져 있으면 마지막 접속 시각으로 보여요<br>사용 중지·재발급·삭제·역할 변경은 운영자 휴대폰에 바로 적용돼요 · 재발급하면 그 휴대폰은 바로 로그아웃되니 새 안내문을 보내 주세요<br>운영자 화면 주소: <span class="mono">${esc(OP_URL)}</span></div>
   ${pgMasters()}`;
 }
 function pgMasters(){
@@ -704,8 +720,8 @@ function pgMasters(){
   return `<section class="sec"><div class="sec-h"><h2>마스터 계정</h2><span class="meta">한쪽이 비밀번호를 잊으면 다른 쪽이 임시 비밀번호를 재발급해요</span></div>
   <div class="tbl"><table><thead><tr><th>이름</th><th>아이디</th><th>임시 비밀번호</th><th>상태</th><th></th></tr></thead><tbody>
   ${L.map(m=>`<tr><td class="strong">${esc(m.name)}${m.id===ME.id?' <span class="faint">(나)</span>':''}</td><td class="mono">${esc(m.id)}</td>
-    <td class="mono">${m.mustChange&&m.temp?esc(m.temp):`<span class="faint" style="font-family:inherit">${m.mustChange?'채팅으로 전달된 임시 비밀번호':'본인 변경 완료'}</span>`}</td>
-    <td><span class="st ${m.mustChange?'':'ok'}">${m.mustChange?'첫 로그인 전':'사용 중'}</span>${m.lastLogin?`<div class="faint" style="font-size:11.5px;margin-top:2px">최근 접속 ${esc(m.lastLogin)}</div>`:''}</td>
+    <td class="mono">${m.mustChange&&m.temp?esc(m.temp):`<span class="faint" style="font-family:inherit">${m.mustChange?'따로 전달된 임시 비밀번호 · 모르면 재발급':'본인 변경 완료'}</span>`}</td>
+    <td><span class="st ${m.mustChange?'':'ok'}">${m.mustChange?'첫 로그인 전':'비밀번호 설정 완료'}</span>${seenTag(m)}</td>
     <td class="r">${m.id===ME.id?'':`<button class="btn xs ghost" data-act="mReset" data-id="${esc(m.id)}">비밀번호 재발급</button>`}</td></tr>`).join('')}
   </tbody></table></div></section>`;
 }
@@ -785,7 +801,7 @@ function pgLogin(){
     <div class="field"><label>비밀번호</label><input class="input lg" id="lg-pw" type="password" placeholder="비밀번호"></div>
     ${S.loginErr?`<div class="lg-err">${ic('alert','s14')}${S.loginErr}</div>`:''}
     <button class="btn pri block lg" data-act="login">로그인</button>
-    ${STORE.fatal?`<a class="btn block mt8" href="?local=1">비상용 로컬 모드로 열기 (이 PC에만 저장)</a>`:''}
+    ${STORE.fatal||S.netErr?`<a class="btn block mt8" href="?local=1">서버에 연결이 안 되면 · 비상용 로컬 모드로 열기 (이 PC에만 저장)</a>`:''}
     <div class="lg-foot">베타 버전 · 채용 담당자 전용</div>
   </div></div>`;
 }
@@ -799,7 +815,7 @@ function pgChange(){
   return `<div class="login-wrap"><div class="login">
     <div class="lg-logo">${LOGO}</div>
     <h1>비밀번호 변경</h1>
-    <p class="lg-s">처음 로그인했어요 · 앞으로 쓸 비밀번호를 정해 주세요</p>
+    <p class="lg-s">임시 비밀번호로 로그인했어요 · 앞으로 쓸 비밀번호를 정해 주세요</p>
     <div class="field"><label>아이디</label><input class="input lg" value="${esc((S.change&&S.change.id)||ME.id)}" disabled></div>
     <div class="field"><label>새 비밀번호</label><input class="input lg" id="np1" type="password" placeholder="영문·숫자 포함 8자 이상" autocomplete="new-password"></div>
     <div class="field"><label>새 비밀번호 확인</label><input class="input lg" id="np2" type="password" placeholder="한 번 더 입력" autocomplete="new-password"></div>
@@ -819,11 +835,47 @@ function render(){
   const top=logList()[0];S.seenLog=top?top.k:S.seenLog||'0';
 }
 function keepScroll(fn){const y=window.scrollY;const tw=document.querySelector('.tbl-wrap');const x=tw?tw.scrollLeft:0;fn();window.scrollTo(0,y);const tw2=document.querySelector('.tbl-wrap');if(tw2)tw2.scrollLeft=x;}
-let pending=false;
-function safeRender(){const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.closest('#view')){pending=true;return;}if($('#modal-root').innerHTML){pending=true;return;}keepScroll(render);}
-document.addEventListener('focusout',()=>{if(pending)setTimeout(()=>{if(pending){pending=false;safeRender();}},0);});
+let pending=false,pendingSince=0;
+/* 다시 그려도 입력 중인 칸의 포커스·커서·입력값을 그대로 둬요 */
+function focusKey(el){if(!el||!el.dataset)return null;const q=(a,v)=>`[${a}="${CSS.escape(v)}"]`;
+  return el.dataset.app?q('data-app',el.dataset.app):el.dataset.inp?q('data-inp',el.dataset.inp):el.dataset.appchk?q('data-appchk',el.dataset.appchk):el.id?'#'+CSS.escape(el.id):null;}
+function renderKeep(){
+  const ae=document.activeElement;const inView=ae&&ae.closest&&ae.closest('#view');
+  const key=inView?focusKey(ae):null;let val=null,s0=null,s1=null;
+  // 사용자가 직접 고친 값만 지켜요 (손대지 않은 칸은 서버에서 온 새 값을 그대로 보여줘요)
+  // 선택 상자는 고르는 즉시 저장되니 늘 서버 값을 보여줘요
+  if(key&&'value' in ae&&ae.type!=='checkbox'&&ae.tagName!=='SELECT'&&ae.value!==ae.defaultValue){val=ae.value;}
+  if(key){try{s0=ae.selectionStart;s1=ae.selectionEnd;}catch(e){}}
+  keepScroll(render);
+  if(!key)return;const el=document.querySelector(key);if(!el)return;
+  if(val!=null&&el.value!==val)el.value=val;
+  try{el.focus({preventScroll:true});if(s0!=null)el.setSelectionRange(s0,s1);}catch(e){}
+}
+/* 아직 저장하지 않은 글자가 있는 입력 칸 (비고·전자기기·DELAY 등) */
+function dirtyText(ae){return !!(ae&&ae.closest&&ae.closest('#view')&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&!/^(checkbox|radio|button|submit|file)$/.test(ae.type)&&!ae.dataset.inp&&ae.value!==ae.defaultValue);}
+/* 미루는 경우: 아직 저장하지 않은 입력 · 한글 조합 중 · 펼친 선택 상자 · 열린 창(모달) */
+function busyField(ae){
+  if(!ae||!ae.closest||!ae.closest('#view'))return false;
+  if(S.composing)return true;
+  if(ae.tagName==='SELECT')return true;
+  if(/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&!/^(checkbox|radio|button|submit|file)$/.test(ae.type)&&!ae.dataset.inp)return ae.value!==ae.defaultValue;
+  return false;
+}
+function safeRender(){
+  if($('#modal-root').innerHTML||busyField(document.activeElement)){
+    if(!pending)pendingSince=Date.now();pending=true;
+    if(S.auth&&!S.booting)renderNav();   // 연결 상태 표시는 계속 바꿔요
+    return;
+  }
+  pending=false;pendingSince=0;renderKeep();
+}
+document.addEventListener('focusout',()=>{S.composing=false;if(pending)setTimeout(()=>{if(pending){safeRender();}},0);});   // 조합 중에 칸을 떠나도 '조합 중'이 남지 않게
 onDB(safeRender);
-setInterval(()=>{const m=nowMin();if(m!==S.lastMin){S.lastMin=m;safeRender();}},10000);
+setInterval(()=>{const m=nowMin();
+  // 선택 상자 등에 오래(15초+) 머물러 있으면 화면을 새로 그려요 (현장 현황이 멈춰 보이지 않게)
+  // 글자를 입력하는 중(저장 전·한글 조합 중)이거나 창이 열려 있으면 기다려요 → 덜 쓴 내용이 저장되지 않게
+  if(pending&&pendingSince&&Date.now()-pendingSince>15000&&!S.composing&&!$('#modal-root').innerHTML&&!dirtyText(document.activeElement)){pending=false;pendingSince=0;S.lastMin=m;renderKeep();return;}
+  if(m!==S.lastMin){S.lastMin=m;safeRender();}},10000);
 
 /* =====================================================================
    계정 처리
@@ -836,6 +888,7 @@ async function doLogin(){
   if(!id||!pw){S.loginErr='이메일과 비밀번호를 입력해 주세요';render();return;}
   S.busy=true;setBusy('login','로그인 중…');
   let r;try{r=await STORE.auth.signIn(id,pw);}catch(e){r={ok:false,message:'로그인하지 못했어요 · 잠시 후 다시 시도해 주세요'};}finally{S.busy=false;}
+  S.netErr=!r.ok&&/서버에 연결하지 못했어요/.test(r.message||'');
   if(!r.ok){S.loginErr=r.message;render();return;}
   S.loginErr='';
   if(r.mustChange){S.change={id:r.me.id,old:pw};render();setTimeout(()=>{const el=$('#np1');el&&el.focus();},0);return;}
@@ -854,7 +907,7 @@ async function savePw(){
   const r=await STORE.auth.changePassword(S.change.old,n);S.busy=false;
   if(!r.ok){S.loginErr=r.message;render();return;}
   S.loginErr='';
-  await finishLogin(STORE.auth.me,'첫 로그인 · 비밀번호 변경','people');toast('비밀번호를 바꿨어요 · 이제 운영자를 초대해 보세요');
+  await finishLogin(STORE.auth.me,'임시 비밀번호로 로그인 · 새 비밀번호 설정','people');toast('비밀번호를 바꿨어요 · 이제 운영자를 초대해 보세요');
 }
 async function changeMasterPw(){
   const o=$('#mp0').value,n=$('#mp1').value,c=$('#mp2').value;const E=$('#mp-err');const fail=m=>{E.style.display='flex';E.textContent=m;};
@@ -925,7 +978,10 @@ document.addEventListener('click',e=>{
     case 'ttDelDo':dbSet('roster',null);addLog(WHO,'시간표 삭제');closeModal();pending=false;TOKEN.v=null;render();toast('시간표를 지웠어요');break;
     case 'opReset':{const o=opAcc(t.dataset.id);modal({title:'비밀번호 재발급',body:`<div>${esc(o.name)} · ${esc(t.dataset.id)}<br>새 임시 비밀번호를 만들고, 운영자는 다음 로그인 때 비밀번호를 다시 정해요.</div><div class="callout warn mt12" style="margin-bottom:0">${ic('alert')}<span>${SYNC.on?'사용 중인 휴대폰은 바로 로그아웃돼요':'새 안내문(새 초대 링크)을 다시 보내야 휴대폰에 적용돼요'}</span></div>`,actions:[{label:'취소',act:'closeModal'},{label:'재발급',act:'opResetDo',cls:'pri',data:`data-id="${esc(t.dataset.id)}"`}]});break;}
     case 'opResetDo':resetOp(t.dataset.id);break;
-    case 'opToggle':{const id=t.dataset.id;const o=opAcc(id);if(!o)break;opAdmin(()=>STORE.admin.setDisabled(id,!o.disabled),`운영자 ${o.disabled?'다시 사용':'사용 중지'} · ${o.name} ${id}`,`${o.name} · ${o.disabled?'다시 사용':'사용 중지 · 휴대폰에서 바로 로그아웃돼요'}`);break;}
+    case 'opToggle':{const id=t.dataset.id;const o=opAcc(id);if(!o)break;
+      if(!o.disabled){modal({title:'운영자 사용 중지',body:`<div>${esc(o.name)} · ${esc(id)} 계정을 사용 중지해요.</div><div class="callout warn mt12" style="margin-bottom:0">${ic('alert')}<span>그 휴대폰은 바로 로그아웃돼요 · 나중에 '다시 사용'으로 바꿔도 운영자가 다시 로그인해야 해요</span></div>`,actions:[{label:'취소',act:'closeModal'},{label:'사용 중지',act:'opToggleDo',cls:'dangerfill',data:`data-id="${esc(id)}"`}]});break;}
+      opAdmin(()=>STORE.admin.setDisabled(id,false),`운영자 다시 사용 · ${o.name} ${id}`,`${o.name} · 다시 사용`);break;}
+    case 'opToggleDo':{const id=t.dataset.id;const o=opAcc(id);if(!o)break;closeModal();opAdmin(()=>STORE.admin.setDisabled(id,!o.disabled),`운영자 ${o.disabled?'다시 사용':'사용 중지'} · ${o.name} ${id}`,`${o.name} · ${o.disabled?'다시 사용':'사용 중지 · 휴대폰에서 바로 로그아웃돼요'}`);break;}
     case 'mReset':{const m=accOf(t.dataset.id);if(!m)break;modal({title:'마스터 비밀번호 재발급',body:`<div>${esc(m.name)} · ${esc(t.dataset.id)}<br>새 임시 비밀번호를 만들어요. 그 마스터는 다음 로그인 때 비밀번호를 다시 정해요.</div><div class="callout warn mt12" style="margin-bottom:0">${ic('alert')}<span>그 계정으로 로그인된 기기는 바로 로그아웃돼요</span></div>`,actions:[{label:'취소',act:'closeModal'},{label:'재발급',act:'mResetDo',cls:'pri',data:`data-id="${esc(t.dataset.id)}"`}]});break;}
     case 'mResetDo':resetOp(t.dataset.id);break;
     case 'opDel':{const o=opAcc(t.dataset.id);modal({title:'운영자 삭제',body:`<div>${esc(o.name)} · ${esc(t.dataset.id)} 계정을 삭제해요. 지금까지 남긴 기록은 활동 로그에 그대로 있어요.</div>`,actions:[{label:'취소',act:'closeModal'},{label:'삭제',act:'opDelDo',cls:'dangerfill',data:`data-id="${esc(t.dataset.id)}"`}]});break;}
@@ -943,8 +999,8 @@ document.addEventListener('click',e=>{
     case 'addConduct':modal({title:'행동 강령 추가',body:`<div class="fgrid"><div class="field"><label>시각</label><input class="input" type="time" id="cd-t" value="${HM(Math.ceil((nowMin()+10)/10)*10)}"></div><div class="field"><label>담당</label><select class="select" id="cd-w"><option>접수</option><option>인솔</option><option>상주</option></select></div></div><div class="field" style="margin:0"><label>내용</label><input class="input" id="cd-x" placeholder="예) 2면접실 평가위원 다과 준비"></div><div class="note">운영관리자 모바일 행동 강령에 바로 추가돼요</div>`,actions:[{label:'취소',act:'closeModal'},{label:'추가',act:'doConduct',cls:'pri'}]});break;
     case 'doConduct':{const x=$('#cd-x').value.trim();if(!x){toast('내용을 입력해 주세요',true);break;}const tm=$('#cd-t').value||HM(nowMin());const id='x'+Date.now().toString(36);dbSet('extra/'+id,{t:tm,txt:x,who:$('#cd-w').value});addLog(WHO,`행동 강령 추가 · ${tm} ${x}`);closeModal();pending=false;keepScroll(render);toast('행동 강령 추가');break;}
     case 'delConduct':{const id=t.dataset.id;const c=conductList().find(x=>x.id===id);if(!c)break;dbSet('extra/'+id,null);dbSet('conduct/'+id,null);addLog(WHO,`행동 강령 삭제 · ${c.t} ${c.txt}`);keepScroll(render);break;}
-    case 'reset':modal({title:'베타 데이터 초기화',body:`<div>접수 상태·전자기기·입퇴실·지연·비고, 행동 강령 체크와 추가 항목, 활동 로그를 모두 지워요. 올린 시간표와 마스터·운영자 계정은 그대로 남아요.</div><div class="callout warn mt12" style="margin-bottom:0">${ic('alert')}<span><b>되돌릴 수 없어요</b> · 필요하면 먼저 현장 기록을 내보내 주세요</span></div>`,actions:[{label:'취소',act:'closeModal'},{label:'현장 기록 내보내기',act:'boardCsv'},{label:'초기화',act:'doReset',cls:'dangerfill'}]});break;
-    case 'doReset':closeModal();pending=false;Promise.resolve(dbReset()).then(r=>{if(r&&r.ok===false){toast(r.message||'초기화하지 못했어요',true);return;}addLog(WHO,'베타 데이터 초기화');render();toast('초기화 완료 · 처음 상태로 돌아갔어요');},err=>{console.error(err);toast('초기화하지 못했어요 · 연결을 확인해 주세요',true);});break;
+    case 'reset':modal({title:'베타 데이터 초기화',body:`<div>접수 상태·전자기기·입퇴실·지연·비고, 행동 강령 체크와 추가 항목, 활동 로그를 모두 지워요. 올린 시간표와 마스터·운영자 계정은 그대로 남아요.</div><div class="callout warn mt12">${ic('alert')}<span><b>되돌릴 수 없어요</b> · 서버에 백업이 없어요 · 필요하면 먼저 현장 기록을 내보내 주세요</span></div><div class="field" style="margin:0"><label>확인을 위해 <b>초기화</b>라고 입력해 주세요</label><input class="input" id="rs-c" autocomplete="off"></div>`,actions:[{label:'취소',act:'closeModal'},{label:'현장 기록 내보내기',act:'boardCsv'},{label:'초기화',act:'doReset',cls:'dangerfill'}]});break;
+    case 'doReset':{const c=$('#rs-c');if(!c||c.value.trim()!=='초기화'){toast("확인란에 '초기화'라고 입력해 주세요",true);break;}}closeModal();pending=false;Promise.resolve(dbReset()).then(r=>{if(r&&r.ok===false){toast(r.message||'초기화하지 못했어요',true);return;}addLog(WHO,'베타 데이터 초기화');render();toast('초기화 완료 · 처음 상태로 돌아갔어요');},err=>{console.error(err);toast('초기화하지 못했어요 · 연결을 확인해 주세요',true);});break;
     case 'boardCsv':{if(!J.ready){toast('시간표가 없어요',true);break;}const head=['면접실','조','면접번호','수험번호','성명','모집분야','연락처','집결','예정 시작','현재 시작','현재 종료','접수 상태','접수 처리','처리자','전자기기','입실','퇴실','면접비','DELAY(분)','비고'];
       const lines=[head.join(',')];
       J.sched.rooms.forEach(rm=>sessions(rm,true).forEach(x=>x.members.forEach(no=>{const a=A(no),p=P(no);
@@ -954,9 +1010,17 @@ document.addEventListener('click',e=>{
     case 'schedCsv':{const lines=['면접실,조,면접번호,수험번호,이름,모집분야,집결,준비실 이동,준비 시작,면접실 이동,면접시작,면접종료'];J.sched.rooms.forEach(rm=>sessions(rm,false).forEach(x=>x.members.forEach(no=>{const p=P(no);lines.push([rm.name,x.label,INO(no),no,p.name,p.field,J.arrive[no],x.it.steps.prepMove,x.it.steps.prepStart,x.it.steps.roomMove,HM(x.s),HM(x.e)].map(csvCell).join(','));})));download(`ONSITE_BETA_시간표_${CONFIG.date.replace(/\./g,'')}.csv`,lines.join('\n'));break;}
   }
 });
+function inpUpdate(t){
+  S[t.dataset.inp]=t.value;
+  const tb=t.dataset.inp==='monQ'&&$('#mon-body');
+  if(tb){tb.innerHTML=monBody(S.monQ.trim(),nowMin());return;}   // 표 본문만 바꿔요 → 검색창은 그대로
+  renderKeep();
+}
+document.addEventListener('compositionstart',e=>{if(e.target.closest&&e.target.closest('#view'))S.composing=true;});
+document.addEventListener('compositionend',e=>{S.composing=false;const t=e.target;if(t.dataset&&t.dataset.inp)inpUpdate(t);if(pending)setTimeout(()=>{if(pending)safeRender();},0);});
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.dataset.inp){S[t.dataset.inp]=t.value;const pos=t.selectionStart;render();const el=document.querySelector(`[data-inp="${t.dataset.inp}"]`);if(el){el.focus();el.setSelectionRange(pos,pos);}}
+  if(t.dataset.inp){if(e.isComposing){const tb=t.dataset.inp==='monQ'&&$('#mon-body');if(tb){S.monQ=t.value;tb.innerHTML=monBody(S.monQ.trim(),nowMin());}return;}inpUpdate(t);}
 });
 document.addEventListener('change',e=>{
   const t=e.target;
@@ -992,7 +1056,7 @@ async function boot(){
   if(!STORE.fatal&&typeof STORE.boot!=='function')STORE.fatal='온라인 모드 파일을 불러오지 못했어요 · 인터넷 연결을 확인한 뒤 새로고침해 주세요';
   if(STORE.fatal){S.booting=false;S.loginErr=STORE.fatal;render();return;}
   const r=await STORE.boot();S.booting=false;
-  if(r.authed){setMe(r.me);S.auth=true;}else if(r.error)S.loginErr=r.error;
+  if(r.authed){setMe(r.me);S.auth=true;}else if(r.error){S.loginErr=r.error;S.netErr=true;}
   render();
 }
 boot();

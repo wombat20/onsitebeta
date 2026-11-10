@@ -2,14 +2,16 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>ONSITE sb harness (test only)</title></head>
 <body>
 <!-- 테스트 전용: 화면 없이 저장 계층(js/onsite-store.js + js/onsite-sb.js)만 불러와 실제 서버와 주고받는지 확인해요.
-     ?app=master|operator  ?ev=TEST(기본) · 비밀번호 등은 테스트 스크립트가 런타임에 넘겨요(파일에는 없음) -->
+     ?app=master|operator  ?ev=TEST(기본 · TEST… 만 허용) · 서버 주소는 CONFIG.SB_URL 고정 · 비밀번호 등은 테스트 스크립트가 런타임에 넘겨요(파일에는 없음) -->
 <script>window.ONSITE_APP=new URLSearchParams(location.search).get('app')||'master';</script>
 <script src="../../js/onsite-engine.js"></script>
 <script>
   (function(){const q=new URLSearchParams(location.search);
-    CONFIG.code=q.get('ev')||'TEST';
-    if(q.get('sb'))CONFIG.SB_URL=q.get('sb');
-    if(q.get('dom'))CONFIG.OP_EMAIL_DOMAIN=q.get('dom');})();
+    /* 보안: 이 파일도 GitHub Pages 에 공개돼요. 같은 사이트(브라우저 저장소)를 쓰므로
+       - 행사 코드는 TEST… 만 받아요 → 실제 행사(KFI26)의 로그인 정보는 절대 읽지 않아요
+       - 서버 주소는 바꿀 수 없어요 → 저장된 로그인 정보가 다른 서버로 보내지지 않아요 */
+    const ev=q.get('ev')||'';CONFIG.code=/^TEST[A-Z0-9-]{0,20}$/.test(ev)?ev:'TEST';
+    const dom=q.get('dom')||'';if(/^[a-z0-9.-]{3,60}$/.test(dom))CONFIG.OP_EMAIL_DOMAIN=dom;})();
 </script>
 <script src="../../js/onsite-store.js"></script>
 <script src="../../vendor/supabase-2.118.0.js"></script>

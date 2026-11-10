@@ -9,7 +9,6 @@ import path from 'node:path';
 import { startServer } from './lib/serve.mjs';
 import { REPO, SCRATCH, FIXTURES, loadPlaywright } from './lib/env.mjs';
 
-const SB_URL = process.env.ONSITE_SB_URL || 'https://pptxgvkbgzasygdryxkw.supabase.co';
 const qa = JSON.parse(fs.readFileSync(path.join(SCRATCH, 'secrets', 'qa.json'), 'utf8'));
 const findCred = o => { if (!o || typeof o !== 'object') return null; if (o.email && o.password && /qa-master/i.test(o.email)) return o; for (const v of Object.values(o)) { const r = findCred(v); if (r) return r; } return null; };
 const MASTER = findCred(qa);
@@ -31,7 +30,7 @@ async function openHarness(app) {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   page.on('pageerror', e => errors.push(`${app}: ${e.message}`));
-  const q = new URLSearchParams({ app, ev: 'TEST', sb: SB_URL, dom: DOMAIN });
+  const q = new URLSearchParams({ app, ev: 'TEST', dom: DOMAIN });   // 서버 주소는 하네스가 CONFIG.SB_URL 로 고정해요
   await page.goto(`${srv.url}/tests/harness/sb-harness.html?${q}`);
   return { ctx, page };
 }
@@ -142,16 +141,37 @@ try {
   const whoSeen = await waitFor(M.page, () => { const l = logList().find(x => x.txt === '작성자위조시험'); return l && l.who !== '가짜이름 · 마스터' ? l.who : null; }, null, 20000);
   ok('로그 작성자 위조 불가(서버가 계정 이름으로 기록)', whoSeen === '테스트운영 · 운영관리자', String(whoSeen));
 
-  // 10-3b. 같은 계정을 두 번째 탭에서 열면 그 탭은 기록을 보내지 않아요 (전송 대기열 덮어쓰기 방지)
+  // 10-3b. 같은 계정을 두 번째 탭에서 열면: 그 탭은 가려지고 기록이 막혀요 (전송 대기열 덮어쓰기 방지)
+  //        → '이 탭에서 계속 쓰기'로 가져오면 앞 탭이 가려지고 → 그 탭을 닫으면 앞 탭이 자동으로 이어받아요
   const O2 = await O.ctx.newPage();
   O2.on('pageerror', e => errors.push(`operator2: ${e.message}`));
   await O2.goto(O.page.url());
-  const b2 = await O2.evaluate(async () => { window.NOTICES = []; STORE.onNotice = m => NOTICES.push(m); const r = await STORE.boot(); return { authed: r.authed, blocked: STORE.blocked }; });
-  ok('두 번째 탭: 로그인 상태는 이어지지만 기록 보내기 차단', b2.authed && b2.blocked === true, JSON.stringify(b2));
-  const b2w = await O2.evaluate(no => { setApp(no, { note: '두번째탭' }); return { pending: STORE.pending, notice: (window.NOTICES || []).join(' | ') }; }, nos[8]);
-  ok('두 번째 탭 입력은 대기열에 쌓이지 않고 안내', b2w.pending === 0 && /다른 탭/.test(b2w.notice), JSON.stringify(b2w));
-  ok('첫 번째 탭은 계속 정상', await O.page.evaluate(() => !STORE.blocked && ['poll', 'live'].includes(SYNC.state)));
+  const b2 = await O2.evaluate(async () => { window.NOTICES = []; STORE.onNotice = m => NOTICES.push(m); const r = await STORE.boot(); await new Promise(r => setTimeout(r, 300)); return { authed: r.authed, blocked: STORE.blocked }; });
+  ok('두 번째 탭: 로그인 상태는 이어지지만 기록 차단', b2.authed && b2.blocked === true, JSON.stringify(b2));
+  const b2w = await O2.evaluate(no => { const r = setApp(no, { note: '두번째탭' }); return { r, pending: STORE.pending, local: !!((DB.apps || {})[no] && DB.apps[no].note === '두번째탭'), overlay: !!document.getElementById('onsite-blocked'), label: syncLabel()[0] }; }, nos[8]);
+  ok('두 번째 탭: 가림 화면 · 입력 거부(화면에도 안 남음) · 상태 표시', b2w.r === false && b2w.pending === 0 && !b2w.local && b2w.overlay && /다른 탭/.test(b2w.label), JSON.stringify(b2w));
+  ok('첫 번째 탭은 계속 정상', await O.page.evaluate(() => !STORE.blocked && !document.getElementById('onsite-blocked') && ['poll', 'live'].includes(SYNC.state)));
+  await O2.click('[data-onsite-takeover]');
+  const tk2 = await waitFor(O2, () => !STORE.blocked && !document.getElementById('onsite-blocked'), null, 10000);
+  const tk1 = await waitFor(O.page, () => STORE.blocked && !!document.getElementById('onsite-blocked'), null, 10000);
+  ok("'이 탭에서 계속 쓰기' → 두 번째 탭이 기록 · 첫 번째 탭은 가려짐", !!tk2 && !!tk1, JSON.stringify({ tk2, tk1 }));
+  const w2 = await O2.evaluate(no => setApp(no, { note: '가져온탭' }), nos[8]);
+  ok('가져온 탭의 기록이 서버로', w2 === true && !!(await waitFor(M.page, no => H.app(no) && H.app(no).note === '가져온탭', nos[8], 20000)));
   await O2.close();
+  ok('두 번째 탭을 닫으면 첫 번째 탭이 자동으로 이어받음', !!(await waitFor(O.page, () => !STORE.blocked && !document.getElementById('onsite-blocked'), null, 10000)));
+  const w1 = await O.page.evaluate(no => setApp(no, { note: '다시첫탭' }), nos[8]);
+  ok('이어받은 첫 번째 탭의 기록이 서버로', w1 === true && !!(await waitFor(M.page, no => H.app(no) && H.app(no).note === '다시첫탭', nos[8], 20000)));
+
+  // 10-3c. 인터넷 표시는 켜져 있어도 서버에 닿지 않으면 '연결 끊김'으로 보여요 (빈 전송이 '연결됨'으로 되돌리지 않게)
+  await O.page.route('**/rest/v1/rpc/sync_pull*', r => r.abort());
+  await O.page.evaluate(() => STORE.pull(true));
+  await new Promise(r => setTimeout(r, 2000));
+  const st1 = await O.page.evaluate(() => ({ s: SYNC.state, l: syncLabel()[0] }));
+  ok('서버에 닿지 않으면 연결 끊김 표시 유지', st1.s === 'error', JSON.stringify(st1));
+  await O.page.unroute('**/rest/v1/rpc/sync_pull*');
+  await O.page.evaluate(() => STORE.pull(true));
+  ok('다시 닿으면 연결됨으로', !!(await waitFor(O.page, () => ['poll', 'live'].includes(SYNC.state), null, 10000)));
+  ok('최근 접속 시각 기록(마스터에서 보임)', !!(await waitFor(M.page, id => { const o = opList().find(x => x.id === id); return o && o.lastAt && (STORE.srvNow() - Date.parse(o.lastAt)) < 6 * 60000; }, opId, 15000)));
 
   // 10-4. 초기화 전에 쌓인 미전송 기록은 초기화 뒤에 되살아나지 않아요
   await O.ctx.setOffline(true);

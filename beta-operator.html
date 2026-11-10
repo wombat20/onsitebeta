@@ -83,8 +83,9 @@ body.shield .shield-ov{display:flex;}
 .input:focus{border-color:var(--pri);box-shadow:0 0 0 3px rgba(36,102,224,.12);}
 textarea.input{height:auto;min-height:88px;padding:12px 14px;resize:none;line-height:1.5;}
 .flabel{font-size:13px;font-weight:600;color:var(--tx2);margin:16px 0 7px;}
-.seg{display:flex;background:var(--bg-sub);border-radius:10px;padding:3px;gap:2px;}
-.seg button{flex:1;height:34px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--tx2);white-space:nowrap;}
+.seg{display:flex;background:var(--bg-sub);border-radius:10px;padding:3px;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.seg::-webkit-scrollbar{display:none;}
+.seg button{flex:1 0 auto;padding:0 12px;height:34px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--tx2);white-space:nowrap;}
 .seg button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 2px rgba(15,30,69,.1);}
 .chips{display:flex;flex-wrap:wrap;gap:6px;}
 .chip{height:36px;padding:0 13px;border-radius:18px;border:1px solid var(--line2);font-size:13.5px;font-weight:500;color:var(--tx2);background:#fff;}
@@ -416,8 +417,12 @@ svg.i.ph{fill:currentColor;stroke:none;}
 .listhead{display:flex;align-items:center;gap:8px;margin:6px 0 12px;}
 .listhead .ttl{margin:0;}
 .ck-meta{font-size:12px;color:var(--tx3);}
-/* 모바일 실기기: 프레임 없이 전체 화면 */
-@media (max-width:520px){
+/* 당겨서 새로고침 막기 (오프라인일 때 새로고침하면 화면을 다시 못 열어요) */
+html,body{overscroll-behavior-y:none;}
+.page,.sheet{overscroll-behavior-y:contain;}
+/* 모바일 실기기(가로 화면·폴더블·태블릿 포함): 프레임 없이 전체 화면 */
+@media (max-width:520px),(max-height:520px),(hover:none) and (pointer:coarse){
+  .input,.search input{font-size:16px;}   /* 아이폰은 16px보다 작은 입력칸을 누르면 화면을 확대해요 */
   body{padding:0;background:#fff;display:block;min-height:0;}
   .doc-tag{display:none;}
   .frame{width:100%;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none;}
@@ -439,14 +444,14 @@ svg.i.ph{fill:currentColor;stroke:none;}
   <div class="main secure" id="main"></div>
   <div class="tabbar" id="tabbar"></div>
   <div id="layer"></div>
-  <div class="shield-ov"><div><b>화면 보호 중</b>운영관리자 화면 캡처 방지 · 앱 복귀 시 해제</div></div>
+  <div class="shield-ov"><div><b>화면 보호 중</b>개인정보 보호 · 이 화면으로 돌아오면 다시 보여요</div></div>
 </div>
 
 <script>window.ONSITE_APP='operator';</script>
-<script src="js/onsite-engine.js?v=3"></script>
-<script src="js/onsite-store.js?v=3"></script>
+<script src="js/onsite-engine.js?v=4"></script>
+<script src="js/onsite-store.js?v=4"></script>
 <script src="vendor/supabase-2.118.0.js"></script>
-<script src="js/onsite-sb.js?v=3"></script>
+<script src="js/onsite-sb.js?v=4"></script>
 <script>
 const SYM=`<svg class="logo-sym" role="img" aria-label="ONSITE" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 177.00 120.00"><g transform="translate(0 -20)"><circle cx="60" cy="80" r="40" fill="none" stroke="#2466E0" stroke-width="34"/><path d="M88.3 51.7 L143.9 107.3 Q156.6 120 156.6 102 L156.6 40" fill="none" stroke="#2466E0" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 const IC={"back": "<path d=\"M165.66,202.34a8,8,0,0,1-11.32,11.32l-80-80a8,8,0,0,1,0-11.32l80-80a8,8,0,0,1,11.32,11.32L91.31,128Z\"/>", "x": "<path d=\"M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z\"/>", "bell": "<path d=\"M221.8,175.94C216.25,166.38,208,139.33,208,104a80,80,0,1,0-160,0c0,35.34-8.26,62.38-13.81,71.94A16,16,0,0,0,48,200H88.81a40,40,0,0,0,78.38,0H208a16,16,0,0,0,13.8-24.06ZM128,216a24,24,0,0,1-22.62-16h45.24A24,24,0,0,1,128,216ZM48,184c7.7-13.24,16-43.92,16-80a64,64,0,1,1,128,0c0,36.05,8.28,66.73,16,80Z\"/>", "lock": "<path d=\"M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z\"/>", "qr": "<path d=\"M224,40V80a8,8,0,0,1-16,0V48H176a8,8,0,0,1,0-16h40A8,8,0,0,1,224,40ZM80,208H48V176a8,8,0,0,0-16,0v40a8,8,0,0,0,8,8H80a8,8,0,0,0,0-16Zm136-40a8,8,0,0,0-8,8v32H176a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V176A8,8,0,0,0,216,168ZM40,88a8,8,0,0,0,8-8V48H80a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8V80A8,8,0,0,0,40,88ZM80,72h96a8,8,0,0,1,8,8v96a8,8,0,0,1-8,8H80a8,8,0,0,1-8-8V80A8,8,0,0,1,80,72Zm8,96h80V88H88Z\"/>", "flag": "<path d=\"M42.76,50A8,8,0,0,0,40,56V224a8,8,0,0,0,16,0V179.77c26.79-21.16,49.87-9.75,76.45,3.41,16.4,8.11,34.06,16.85,53,16.85,13.93,0,28.54-4.75,43.82-18a8,8,0,0,0,2.76-6V56A8,8,0,0,0,218.76,50c-28,24.23-51.72,12.49-79.21-1.12C111.07,34.76,78.78,18.79,42.76,50ZM216,172.25c-26.79,21.16-49.87,9.74-76.45-3.41-25-12.35-52.81-26.13-83.55-8.4V59.79c26.79-21.16,49.87-9.75,76.45,3.4,25,12.35,52.82,26.13,83.55,8.4Z\"/>", "board": "<path d=\"M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z\"/>", "alert": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm-8-80V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,172Z\"/>", "id": "<path d=\"M200,112a8,8,0,0,1-8,8H152a8,8,0,0,1,0-16h40A8,8,0,0,1,200,112Zm-8,24H152a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm40-80V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56ZM216,200V56H40V200H216Zm-80.26-34a8,8,0,1,1-15.5,4c-2.63-10.26-13.06-18-24.25-18s-21.61,7.74-24.25,18a8,8,0,1,1-15.5-4,39.84,39.84,0,0,1,17.19-23.34,32,32,0,1,1,45.12,0A39.76,39.76,0,0,1,135.75,166ZM96,136a16,16,0,1,0-16-16A16,16,0,0,0,96,136Z\"/>", "info": "<path d=\"M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z\"/>", "edit": "<path d=\"M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z\"/>", "down": "<path d=\"M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z\"/>", "spark": "<path d=\"M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z\"/>", "list": "<path d=\"M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z\"/>", "search": "<path d=\"M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z\"/>", "user": "<path d=\"M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z\"/>", "chev": "<path d=\"M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z\"/>", "phone": "<path d=\"M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z\"/>", "arrowup": "<path d=\"M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z\"/>", "check": "<path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/>", "plus": "<path d=\"M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z\"/>", "camera": "<path d=\"M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z\"/>", "chat": "<path d=\"M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z\"/>"};
@@ -464,12 +469,13 @@ if(LOCAL)S.auth={id:'local',name:'운영자',role:'접수'};
    초대 링크(#inv=…)는 무시해요 · 운영자 계정은 온라인 모드에서만 써요 · 링크의 # 뒤는 서버로 보내지지 않아요 */
 async function processHash(){
   const h=location.hash||'';if(h.length<2)return false;
-  history.replaceState(null,'',location.pathname+location.search);
+  // 초대 링크의 아이디(#id=)는 로그인할 때까지 주소에 남겨요 (카카오톡에서 '다른 브라우저로 열기'를 눌러도 아이디가 그대로 채워지게)
+  if(!(!LOCAL&&!S.auth&&/[#&]id=/.test(h)))history.replaceState(null,'',location.pathname+location.search);
   /* 온라인 모드 초대 링크(#id=KFI26-S01): 아이디만 미리 채워요 (비밀번호·지원자 정보는 링크에 없어요) */
   const idm=h.match(/[#&]id=([^&]+)/);
   if(idm&&!LOCAL){let v='';try{v=decodeURIComponent(idm[1]).trim();}catch(e){}
     if(/^[A-Za-z0-9-]{3,40}$/.test(v)){
-      if(!S.auth){S.lgId=v.toUpperCase();S.inviteMsg='아이디가 입력됐어요 · 안내받은 임시 비밀번호로 로그인해 주세요';S.loginErr='';render();setTimeout(()=>{const el=$('#lg-pw');el&&el.focus();},0);}
+      if(!S.auth){S.lgId=v.toUpperCase();S.inviteMsg='아이디가 입력됐어요 · 안내받은 임시 비밀번호로 로그인해 주세요';S.loginErr=STORE.fatal||'';render();setTimeout(()=>{const el=$('#lg-pw');el&&el.focus();},0);}
       else if(v.toUpperCase()!==String(S.auth.id).toUpperCase()){S.switchTo=v.toUpperCase();dialog('다른 계정의 초대 링크예요',`지금 ${esc(S.auth.name)}(${esc(S.auth.id)}) 계정으로 로그인돼 있어요<br>로그아웃하고 ${esc(S.switchTo)} 로 로그인할까요?`,'로그아웃하고 바꾸기','switchAcc',false);}
     }
     return true;}
@@ -496,6 +502,7 @@ const closeDlg=()=>{const d=$('#dlg');d&&d.remove();};
 /* ===== 시간표 없음 ===== */
 function emptyRoster(){
   if(!LOCAL&&SYNC.state==='connecting')return `<div class="empty" style="padding:44px 16px;margin-top:18px">${ic('list','s22')}<div style="margin-top:8px;font-size:15px;font-weight:700;color:var(--tx)">시간표를 불러오는 중이에요…</div></div>`;
+  if(!LOCAL&&SYNC.state==='error'&&!STORE.loaded)return `<div class="empty" style="padding:44px 16px;margin-top:18px">${ic('alert','s22')}<div style="margin-top:8px;font-size:15px;font-weight:700;color:var(--tx)">서버에 연결하지 못해 시간표를 불러오지 못했어요</div><div style="margin-top:4px">인터넷 연결을 확인해 주세요 · 연결되면 자동으로 보여요</div></div>`;
   return `<div class="empty" style="padding:44px 16px;margin-top:18px">${ic('list','s22')}<div style="margin-top:8px;font-size:15px;font-weight:700;color:var(--tx)">아직 시간표가 없어요</div><div style="margin-top:4px">채용 담당자가 시간표를 올리면 자동으로 나타나요</div>${LOCAL?'<div style="margin-top:10px;font-size:12.5px">로컬 모드 · 다른 기기라면 채용 담당자에게 받은 <b>시간표 링크</b>를 열어 주세요</div>':''}</div>`;
 }
 
@@ -539,7 +546,7 @@ function pgList(){
   <div class="seg">${J.sched.rooms.map((rm,i)=>`<button class="${S.room===i?'on':''}" data-act="room" data-i="${i}">${esc(rm.name)}</button>`).join('')}<button class="${S.room==='all'?'on':''}" data-act="room" data-i="all">전체</button></div>
   <div class="tools"><label class="search">${ic('search','s14')}<input placeholder="이름·수험번호·면접번호" data-inp="q" value="${esc(S.q)}"></label></div>
   <div class="lhead"><span>도착</span><span>면접번호 · 성명</span><span>접수</span></div>
-  ${boardList()}
+  <div id="list-body">${boardList()}</div>
   <div class="note">지원자를 눌러 접수 상태·입퇴실·지연을 기록해요 · 지연을 입력하면 이후 일정이 자동 조정되고 도착시간 안내는 그대로예요</div>`;
 }
 function sessRows(list,showRoom){
@@ -619,7 +626,7 @@ function pgMy(){
     ${LOCAL?`<div class="kv"><span class="k">모드</span><span class="v">로컬 모드 · 로그인 없음</span></div>`:`<div class="kv"><span class="k">아이디</span><span class="v">${esc(me.id)}</span></div>
     <div class="kv"><span class="k">비밀번호</span><button class="call" style="border:0;margin:0" data-act="pwSheet">변경</button></div>`}
     <div class="kv"><span class="k">사용 기간</span><span class="v">${DATE_LABEL} 당일</span></div>
-    <div class="kv"><span class="k">화면 캡처 제한</span><span class="st pri">적용 중</span></div></div>
+    <div class="kv"><span class="k">앱 전환 시 화면 가림</span><span class="st pri">적용 중</span></div></div>
   <div class="sec"><div class="sec-h">베타 정보</div>
     <div class="kv"><span class="k">데이터 저장</span><span class="syncdot ${st}">${sl}</span></div>
     <div class="kv"><span class="k">기관</span><span class="v" style="font-weight:500;font-size:13px">${esc(J.org)}</span></div>
@@ -640,7 +647,7 @@ function pgLogin(){
     <div class="flabel">비밀번호</div><input class="input" id="lg-pw" type="password" placeholder="비밀번호">
     ${S.loginErr?`<div class="ol-err">${ic('alert','s14')}${S.loginErr}</div>`:''}
     <button class="btn" style="margin-top:22px" data-act="login">로그인</button>
-    ${STORE.fatal?`<a class="btn ghost" style="margin-top:8px;display:flex;align-items:center;justify-content:center" href="?local=1">비상용 로컬 모드로 열기</a>`:''}
+    ${STORE.fatal?`<button class="btn ghost" style="margin-top:8px" onclick="location.reload()">새로고침</button>`:''}
     <div class="lg-foot">계정 안내를 받지 못했다면 채용 담당자에게 문의해 주세요</div>
   </div>`;
 }
@@ -652,7 +659,7 @@ function pgChange(){
   return `<div class="page olog">
     <div class="ol-top">${SYM}</div>
     <h1>비밀번호 변경</h1>
-    <p class="ol-s">${esc(a.name||'')}님, 처음 로그인했어요<br>앞으로 쓸 비밀번호를 정해 주세요</p>
+    <p class="ol-s">${esc(a.name||'')}님, 임시 비밀번호로 로그인했어요<br>앞으로 쓸 비밀번호를 정해 주세요</p>
     <div class="flabel">아이디</div><input class="input" value="${esc(S.change.id)}" disabled style="background:var(--bg-sub)">
     <div class="flabel">새 비밀번호</div><input class="input" id="np1" type="password" placeholder="영문·숫자 포함 8자 이상" autocomplete="new-password">
     <div class="flabel">새 비밀번호 확인</div><input class="input" id="np2" type="password" placeholder="한 번 더 입력" autocomplete="new-password">
@@ -696,13 +703,18 @@ function renderSheet(){
 }
 /* 다른 기기·탭 변경 반영 (입력 중이면 입력이 끝난 뒤) */
 let pending=false;
-function safeRender(){const ae=document.activeElement;if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.closest('#frame')){pending=true;return;}render(true);}
+/* 검색 중에는 검색창은 그대로 두고 명단만 바꿔요 (키보드가 닫히지 않고 한글 입력이 깨지지 않게) */
+function updateList(){const el=$('#list-body');if(el&&S.tab==='list'&&J.ready&&S.auth){el.innerHTML=boardList();return true;}return false;}
+function safeRender(){const ae=document.activeElement;
+  if(ae&&ae.dataset&&ae.dataset.inp==='q'&&ae.closest('#frame')){if(!updateList()){pending=true;}return;}
+  if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.closest('#frame')){pending=true;return;}render(true);}
 document.addEventListener('focusout',()=>{if(pending)setTimeout(()=>{if(pending){pending=false;safeRender();}},0);});
 onDB(safeRender);
 setInterval(()=>{const m=nowMin();if(m!==S.lastMin){S.lastMin=m;const s=soonConduct(m).find(c=>T(c.t)===m||T(c.t)-m===10);if(s&&S.auth)toast(`${T(s.t)===m?'지금 할 일':'10분 후'} · ${s.txt}`);safeRender();}},10000);
 
 /* ===== 기록 ===== */
 function setStatus(no,v){
+  if(STORE.blocked){toast('이 계정이 다른 탭에서 열려 있어 저장되지 않아요',true);return;}
   const ap=A(no);const so=sessionOf(no);const before=so.x.len;const old=ap.status;
   const patch={status:v};let dev='';
   /* 전자기기 번호: 온라인이면 서버가 하나씩 배정(동시에 접수해도 겹치지 않음) · 로컬 모드나 연결이 안 되면 이 기기에서 다음 번호 */
@@ -747,6 +759,7 @@ async function doLogin(){
 }
 async function finishLogin(me,logTxt){
   S.auth=meToAuth(me);S.change=null;S.tab='board';setWM();
+  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
   await STORE.startSync();
   addLog(who(),logTxt);render();toast(`${S.auth.name} · ${S.auth.role} 담당으로 로그인`);
 }
@@ -758,7 +771,7 @@ async function savePw(){
   S.busy=true;setBusy('pwSave','변경하는 중…');
   const r=await STORE.auth.changePassword(S.change.old,n);S.busy=false;
   if(!r.ok){S.loginErr=r.message;render();return;}
-  S.loginErr='';await finishLogin(STORE.auth.me,'첫 로그인 · 비밀번호 변경');
+  S.loginErr='';await finishLogin(STORE.auth.me,'임시 비밀번호로 로그인 · 새 비밀번호 설정');
 }
 async function changePw(){
   if(LOCAL||S.busy)return;
@@ -821,7 +834,7 @@ document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing)return
   if(['lg-id','lg-pw'].includes(id)){e.preventDefault();doLogin();}else if(['np1','np2'].includes(id)){e.preventDefault();savePw();}else if(['op0','op1','op2'].includes(id)){e.preventDefault();changePw();}});
 document.addEventListener('input',e=>{
   const t=e.target;
-  if(t.dataset.inp==='q'){const pos=t.selectionStart;S.q=t.value;render(true);const el=document.querySelector('[data-inp="q"]');if(el){el.focus();el.setSelectionRange(pos,pos);}}
+  if(t.dataset.inp==='q'){S.q=t.value;if(!updateList()){const pos=t.selectionStart;render(true);const el=document.querySelector('[data-inp="q"]');if(el){el.focus();el.setSelectionRange(pos,pos);}}}
 });
 document.addEventListener('change',e=>{
   const t=e.target;

@@ -42,19 +42,24 @@ function setIn(o,path,val){
 function onDB(fn){SYNC.listeners.push(fn);}
 function fireDB(){applyDB();SYNC.listeners.forEach(f=>{try{f();}catch(e){console.error(e);}});}
 
-/* ---------- 쓰기 (화면에 먼저 반영 → 온라인 모드면 서버로) ---------- */
-function dbSet(path,val){setIn(DB,path,val);saveLocal();applyDB();if(STORE.remote)STORE.remote.put(path,val);}
+/* ---------- 쓰기 (화면에 먼저 반영 → 온라인 모드면 서버로) ----------
+   STORE.blocked: 같은 계정이 다른 탭에서 기록 중 → 이 탭은 바꾸지 않아요 (저장되지 않는 변경이 화면에만 남지 않게) */
+function dbSet(path,val){if(STORE.blocked)return false;setIn(DB,path,val);saveLocal();applyDB();if(STORE.remote)STORE.remote.put(path,val);return true;}
 /* 지원자 기록 병합 · patch 의 null 은 그 항목 삭제 · 서버에는 null 을 포함한 patch 그대로 보내요 */
 function setApp(no,patch,who,txt){
+  if(STORE.blocked)return false;
   const cur=Object.assign({},(DB.apps||{})[no]||{},patch);Object.keys(cur).forEach(k=>{if(cur[k]==null)delete cur[k];});
   setIn(DB,'apps/'+no,cur);saveLocal();applyDB();
   if(STORE.remote)STORE.remote.patchApp(no,patch);
   if(txt)addLog(who,txt);
+  return true;
 }
 function addLog(who,txt){
+  if(STORE.blocked)return false;
   const k=Date.now().toString(36)+Math.random().toString(36).slice(2,6);const e={at:stamp(),who,txt};
   setIn(DB,'log/'+k,e);saveLocal();applyDB();
   if(STORE.remote)STORE.remote.log(k,e);
+  return true;
 }
 /* 현장 기록만 초기화 · 시간표와 계정은 유지 · 온라인 모드는 서버 함수가 처리 */
 function dbReset(){
@@ -78,6 +83,7 @@ function importOnlineCache(){
 }
 function logList(){return Object.entries(DB.log||{}).map(([k,v])=>Object.assign({k},v)).sort((a,b)=>a.k<b.k?1:-1);}
 function syncLabel(){
+  if(STORE.blocked)return['다른 탭에서 사용 중 · 이 탭은 저장 안 됨','err'];
   switch(SYNC.state){
     case 'live':return['실시간 연결됨','ok'];
     case 'poll':return['연결됨 · 주기 동기화','ok'];

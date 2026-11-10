@@ -1,10 +1,10 @@
-/* 로컬 모드 테스트 한 번에: static-check → golden-check → e2e-local
+/* 로컬 모드 테스트 한 번에: static-check → parser-check → golden-check → e2e-local
    실행: node tests/run-local.mjs */
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { TESTS_DIR } from './lib/env.mjs';
 
-const steps = ['static-check.mjs', 'golden-check.mjs', 'e2e-local.mjs'];
+const steps = ['static-check.mjs', 'parser-check.mjs', 'golden-check.mjs', 'e2e-local.mjs'];
 const out = [];
 for (const s of steps) {
   console.log(`\n=== ${s} ===`);

@@ -270,9 +270,67 @@ try {
     return `명단 ${n}명`;
   });
 
+  await step('마스터: 한글 검색(IME 조합) 깨지지 않음 · 검색창에 커서가 있어도 현장 현황 갱신', async () => {
+    await master.click('#nav [data-p="monitor"]');
+    await master.click('[data-inp="monQ"]');
+    const cdp = await ctxA.newCDPSession(master);
+    for (const t of ['ㅇ', '오']) { await cdp.send('Input.imeSetComposition', { text: t, selectionStart: t.length, selectionEnd: t.length }); await master.waitForTimeout(60); }
+    await cdp.send('Input.insertText', { text: '오' });
+    await master.waitForTimeout(150);
+    const s1 = await master.evaluate(() => ({ v: document.querySelector('[data-inp="monQ"]').value, q: S.monQ,
+      rows: [...document.querySelectorAll('#mon-body tr')].filter(tr => tr.querySelector('[data-app$=":status"]')).length,
+      want: J.roster.filter(r => (r.name + r.no + INO(r.no)).includes('오')).length }));
+    assert(s1.v === '오' && s1.q === '오' && s1.rows === s1.want && s1.want === 2, '한글 검색: ' + JSON.stringify(s1));
+    /* 검색창에 커서가 있는 동안 운영자 기록이 들어와도 표가 바로 바뀌어야 해요 */
+    const no = await master.evaluate(() => J.roster.find(r => r.name.includes('오')).no);
+    await op.evaluate(n => setApp(n, { status: '연락중' }, '운영자 · 운영관리자', 'IME 테스트'), no);
+    await until(master, n => { const el = document.querySelector(`[data-app="${n}:status"]`); return el && el.value === '연락중'; }, no, 5000);
+    const s2 = await master.evaluate(() => ({ focus: document.activeElement && document.activeElement.dataset.inp, v: document.querySelector('[data-inp="monQ"]').value }));
+    assert(s2.focus === 'monQ' && s2.v === '오', '갱신 뒤 검색창 유지: ' + JSON.stringify(s2));
+    await op.evaluate(n => setApp(n, { status: '' }, '운영자 · 운영관리자', 'IME 테스트 복구'), no);
+    await master.fill('[data-inp="monQ"]', '');
+    await master.locator('body').click({ position: { x: 5, y: 5 } });
+    return `검색 '오' → ${s1.rows}명 · 커서 유지한 채 갱신`;
+  });
+
+  await step('운영자: 검색창에 커서가 있어도 명단 갱신 · 검색창·입력값 유지 (휴대폰 키보드가 닫히지 않게)', async () => {
+    await op.click('#tabbar [data-t="list"]');
+    await op.click('[data-inp="q"]');
+    await op.keyboard.type('T01-000');
+    await until(op, () => document.querySelectorAll('#list-body .prow').length === 9);
+    await op.evaluate(() => { window.__q = document.querySelector('[data-inp="q"]'); });
+    await master.evaluate(() => setApp('T01-0007', { status: '연락중' }, '로컬 관리자 · 마스터', '검색 갱신 테스트'));
+    await until(op, () => { const r = document.querySelector('#list-body .prow[data-no="T01-0007"]'); return r && /연락중/.test(r.textContent); });
+    const s = await op.evaluate(() => ({ same: document.querySelector('[data-inp="q"]') === window.__q, focus: document.activeElement === window.__q, v: window.__q.value, n: document.querySelectorAll('#list-body .prow').length }));
+    assert(s.same && s.focus && s.v === 'T01-000' && s.n === 9, JSON.stringify(s));
+    await master.evaluate(() => setApp('T01-0007', { status: '' }, '로컬 관리자 · 마스터', '검색 갱신 테스트 복구'));
+    await op.fill('[data-inp="q"]', '');
+    await op.click('#tabbar [data-t="board"]');
+    return '검색창 그대로 · 명단만 갱신';
+  });
+
+  await step('마스터: 한글 엑셀 CSV(CP949)도 읽힘', async () => {
+    const tmp = path.join(SHOTS_DIR, 'timetable-cp949.csv');
+    const { execFileSync } = await import('node:child_process');
+    const utf8 = fs.readFileSync(path.join(FIXTURES, 'timetable.csv'), 'utf8').replace(/^\uFEFF/, '');
+    fs.writeFileSync(tmp, execFileSync('python3', ['-I', '-c', 'import sys;sys.stdout.buffer.write(sys.stdin.read().encode("cp949"))'], { input: utf8 }));
+    await master.click('#nav [data-p="sched"]');
+    await master.setInputFiles('#fileIn', tmp);
+    await master.locator('.modal [data-act="applyTT"]').waitFor({ timeout: 5000 });
+    const n = await master.evaluate(() => PENDING && PENDING.res.rows.length);
+    await master.click('.modal [data-act="closeModal"]');
+    assert(n === 21, 'CP949 CSV 행 수 ' + n);
+    return `${n}명`;
+  });
+
   await step('마스터: 초기화 → 기록만 지움 (시간표 유지) · 운영자 반영', async () => {
     await master.click('#nav [data-p="admin"]');
     await master.click('[data-act="reset"]');
+    /* 확인란에 '초기화'를 입력해야 실행돼요 (서버 백업이 없어 실수로 누르지 않게) */
+    await master.click('.modal [data-act="doReset"]');
+    await master.locator('.toast.red', { hasText: "확인란에 '초기화'" }).waitFor({ timeout: 3000 });
+    assert(await master.evaluate(() => A('T01-0005').status !== '' || logList().length > 1), '확인 입력 없이 초기화됨');
+    await master.fill('#rs-c', '초기화');
     await master.click('.modal [data-act="doReset"]');
     await master.locator('.toast', { hasText: '초기화 완료' }).waitFor();
     const m = await master.evaluate(() => ({ ready: J.ready, n: R().length, st: A('T01-0005').status, logs: logList().length }));

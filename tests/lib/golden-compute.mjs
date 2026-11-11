@@ -15,6 +15,9 @@ async function inPage({ csvUrl, xlsxUrl, brokenCsvUrl, brokenXlsxUrl }) {
     return { res: best.res, sheet: best.n, sheets: wb.SheetNames };
   };
   const out = {};
+  /* 원본 v2 는 불참 시 조 시간을 줄였어요 · 기준값과 같은 계산을 비교하려고 새 엔진도 이 비교 안에서만 켜요
+     (실제 기본값 shrinkOnAbsent:false 는 tests/e2e-local.mjs 에서 따로 확인) */
+  if (typeof CONFIG !== 'undefined' && 'shrinkOnAbsent' in CONFIG) CONFIG.shrinkOnAbsent = true;
   const csv = await readCsv(csvUrl);
   const xl = await readXlsx(xlsxUrl);
   out.csv = clone(csv);

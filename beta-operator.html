@@ -522,7 +522,8 @@ function pgBoard(){
   const pct=act?Math.round(rec/act*100):0;
   const rooms=J.sched.rooms.map(rm=>{const tl=sessions(rm,true);const cur=tl.find(x=>x.s<=now&&x.e>now);const nx=tl.find(x=>x.s>now);const d=roomDelay(rm);
     const chip=d>0?`<span class="st err">+${d}분</span>`:d<0?`<span class="st pri">${d}분</span>`:'<span class="st ok">정시</span>';
-    const line=cur?`${esc(cur.label)} 진행 · ~${HM(cur.e)}`:nx?`${esc(nx.label)} · ${HM(nx.s)}–${HM(nx.e)}`:'모든 조 종료';
+    const line=cur?(cur.attend===0?`${esc(cur.label)} 전원 불참 · ${HM(cur.s)}–${HM(cur.e)}`:`${esc(cur.label)} 진행 · ~${HM(cur.e)}`)
+      :nx?(nx.attend===0?`${esc(nx.label)} · <b style="color:var(--err)">전원 불참</b> · ${HM(nx.s)}–${HM(nx.e)}`:`${esc(nx.label)} · ${HM(nx.s)}–${HM(nx.e)}`):'모든 조 종료';
     return `<div class="bd-room"><div class="h"><b>${esc(rm.name)}</b>${chip}</div><div class="s">${line}</div>
       <div class="dash">${tl.map(x=>`<i class="${x.e<=now?'d':x.s<=now?'c':''}"></i>`).join('')}</div></div>`;}).join('');
   const upc=[];J.sched.rooms.forEach(rm=>sessions(rm,true).forEach(x=>{if(x.s>now)upc.push(x);}));upc.sort((a,b)=>a.s-b.s);
@@ -557,7 +558,7 @@ function sessRows(list,showRoom){
     const x=o.x;const mem=x.members.filter(no=>{if(!q)return true;const pp=P(no);return (pp.name+no+INO(no)).includes(q);});
     if(!mem.length)return '';
     const shift=x.shift;const isNow=x.s<=now&&x.e>now,done=x.e<=now;
-    return `<div class="sess ${isNow?'now':''} ${done?'done':''}"><div class="sess-h"><span class="tm">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}<span class="tm-e">–${HM(x.e)}</span></span><span class="lb">${showRoom?esc(o.room.name)+' · ':''}${esc(x.label)} · ${x.attend}/${x.members.length}명 · ${x.e-x.s}분${!done?` · 대기 ${HM(x.s-10)}`:''}</span>${x.len!==x.planLen?'<span class="rc">재산정</span>':''}${isNow?'<span class="nowtag">진행 중</span>':''}</div>
+    return `<div class="sess ${isNow?'now':''} ${done?'done':''}"><div class="sess-h"><span class="tm">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}<span class="tm-e">–${HM(x.e)}</span></span><span class="lb">${showRoom?esc(o.room.name)+' · ':''}${esc(x.label)} · ${x.attend}/${x.members.length}명${x.attend===0?' · 전원 불참':''} · ${x.e-x.s}분${!done?` · 대기 ${HM(x.s-10)}`:''}</span>${x.len!==x.planLen?'<span class="rc">재산정</span>':''}${isNow?'<span class="nowtag">진행 중</span>':''}</div>
       ${mem.map(no=>{const a=A(no),pp=P(no);return `<div class="prow ${a.status==='불참'?'absent':''}" data-act="open" data-no="${esc(no)}"><span class="no">${esc(J.arrive[no])}</span><div class="who"><div class="l1">${esc(INO(no))}<span>${esc(pp.name)}</span></div><div class="l2">${esc(no)}${a.sex?` · ${esc(a.sex)}`:''}${CONFIG.useDevice&&a.device?` · 기기 ${esc(a.device)}`:''}${a.inR?' · 입실':''}${a.outR?' · 퇴실':''}${a.delay?` · <i>DELAY +${a.delay}</i>`:''}${a.note?` · ${esc(a.note)}`:''}</div></div><span class="st ${statusCls(a.status)}">${esc(stLabel(a.status))}</span></div>`;}).join('')}</div>`;
   }).join('');
 }
@@ -820,7 +821,7 @@ document.addEventListener('click',e=>{
     case 'room':S.room=t.dataset.i==='all'?'all':+t.dataset.i;render(true);break;
     case 'open':S.sheet={type:'app',no};renderSheet();break;
     case 'setSt':{const ap=A(no),v=t.dataset.v;if(ap.status===v)break;
-      if(v==='불참'){dialog('불참 처리',`${esc(INO(no))} ${esc(P(no).name)}<br>불참으로 처리하면 해당 조 면접시간이 자동으로 줄어들어요`,'불참 처리','doAbsent',true,`data-no="${no}"`);break;}
+      if(v==='불참'){dialog('불참 처리',`${esc(INO(no))} ${esc(P(no).name)}<br>불참으로 처리할까요? (면접시간은 원래 시간표 그대로예요)`,'불참 처리','doAbsent',true,`data-no="${esc(no)}"`);break;}
       setStatus(no,v);break;}
     case 'doAbsent':closeDlg();setStatus(no,'불참');break;
     case 'tgl':{const ap=A(no),k=t.dataset.k;const v=!ap[k];const lb={inR:'입실',outR:'퇴실',fee:'면접비'}[k];

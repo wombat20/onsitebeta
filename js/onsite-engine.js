@@ -15,6 +15,8 @@ const CONFIG={
   place:'',
   /* 앞 조가 늦어지면 다음 조와 최소 몇 분 간격을 두고 밀릴지 (점심처럼 긴 빈 시간은 지연을 흡수해요) */
   bufferMin:5,
+  /* 불참이 있으면 그 조 면접시간을 인원 비율만큼 줄일지 · false 면 불참이 있어도 원래 시간표 그대로 (현장 요청 · 시간표가 앞당겨지지 않게) */
+  shrinkOnAbsent:false,
   useDevice:true, useFee:true,
   statuses:['','접수예정','접수','연락중','불참'],
   /* 시간표 링크가 가리킬 운영자 화면 주소 · 두 파일을 다른 곳에 올리면 넣어 주세요
@@ -66,8 +68,8 @@ function buildJ(){
   J.ready=rows.length>0;J.v=R0?+R0.v||0:0;J.file=R0?R0.file||'':'';J.labels=(R0&&R0.labels)||{};
   J.roster=rows.map(x=>Object.assign({},x));J.byNo={};J.arrive={};
   const apps={};J.roster.forEach(r=>{J.byNo[r.no]=r;apps[r.no]=J.apps[r.no]||blankApp();J.arrive[r.no]=r.arrive||HM(T(r.start)-40);});J.apps=apps;
-  const rooms={};
-  J.roster.forEach(r=>{const rm=rooms[r.room]||(rooms[r.room]={name:r.room,items:{}});
+  const rooms=Object.create(null);
+  J.roster.forEach(r=>{const rm=rooms[r.room]||(rooms[r.room]={name:r.room,items:Object.create(null)});
     const solo=!r.grp||r.grp==='-';const key=solo?'p:'+r.no:'g:'+r.grp+'@'+r.start;
     const it=rm.items[key]||(rm.items[key]={kind:'s',id:'s'+hash(r.room+'|'+key).toString(36),grp:solo?'':r.grp,label:solo?(r['ino']||r.no):`${r.grp}조`,
       members:[],ps:T(r.start),pe:T(r.end),steps:{prepMove:r.prepMove,prepStart:r.prepStart,roomMove:r.roomMove},field:r.field});
@@ -90,7 +92,7 @@ function timeline(room,actual){
   room.items.forEach(it=>{
     const n=it.members.length;const planLen=it.pe-it.ps;
     const attend=actual?it.members.filter(no=>A(no).status!=='불참').length:n;
-    const len=actual?Math.round(planLen*attend/(n||1)):planLen;
+    const len=actual&&CONFIG.shrinkOnAbsent?Math.round(planLen*attend/(n||1)):planLen;
     let s=it.ps;
     if(actual&&prevE!=null){const gap=Math.max(0,it.ps-prevPE);s=Math.max(it.ps,prevE+Math.min(gap,CONFIG.bufferMin));}
     const delay=actual?sum(it.members.map(no=>+A(no).delay||0)):0;

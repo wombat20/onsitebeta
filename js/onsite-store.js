@@ -34,8 +34,12 @@ function applyDB(){
   J.roster.forEach(r=>{const a=J.apps[r.no];const d=(DB.apps||{})[r.no]||{};
     a.status=CONFIG.statuses.includes(d.status)?d.status:'';a.device=d.device==null?'':String(d.device);a.inR=!!d.inR;a.outR=!!d.outR;a.fee=!!d.fee;a.delay=+d.delay||0;a.note=d.note||'';a.ck=d.ck||null;a.sex=d.sex==='남'||d.sex==='여'?d.sex:'';});
 }
+/* 보안: 서버에서 온 키(수험번호·항목 id)가 객체 원형(__proto__ 등)을 건드리지 못하게 해요 */
+const BAD_KEY=new Set(['__proto__','constructor','prototype']);
+const okKey=k=>typeof k==='string'&&k!==''&&!k.includes('/')&&!BAD_KEY.has(k);
 function setIn(o,path,val){
   const ks=String(path).split('/').filter(Boolean);let c=o;
+  if(!ks.length||ks.some(k=>BAD_KEY.has(k)))return;
   for(let i=0;i<ks.length-1;i++){if(c[ks[i]]==null||typeof c[ks[i]]!=='object')c[ks[i]]={};c=c[ks[i]];}
   const k=ks[ks.length-1];if(val==null)delete c[k];else c[k]=val;
 }

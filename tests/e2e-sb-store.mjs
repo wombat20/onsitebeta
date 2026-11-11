@@ -141,6 +141,18 @@ try {
   const whoSeen = await waitFor(M.page, () => { const l = logList().find(x => x.txt === '작성자위조시험'); return l && l.who !== '가짜이름 · 마스터' ? l.who : null; }, null, 20000);
   ok('로그 작성자 위조 불가(서버가 계정 이름으로 기록)', whoSeen === '테스트운영 · 운영관리자', String(whoSeen));
 
+  // 10-3a. 보안: 운영자가 화면을 거치지 않고 이상한 키·형식의 기록을 서버에 넣어도 마스터 화면(객체 원형)이 오염되지 않아요
+  const evil = await O.page.evaluate(async () => {
+    const a = await STORE.sb.from('apps').insert({ event_code: CONFIG.code, no: '__proto__/ppq', data: '"><img id=ppq src=x>' });
+    const c = await STORE.sb.from('conduct').upsert({ event_code: CONFIG.code, id: 'constructor', data: '"><img id=ppc src=x>' }, { onConflict: 'event_code,id' });
+    return { a: a.error ? a.error.code : 'ok', c: c.error ? c.error.code : 'ok' };
+  });
+  await M.page.evaluate(() => STORE.pull(true));
+  await new Promise(r => setTimeout(r, 1500));
+  const pp = await M.page.evaluate(() => ({ proto: ({}).ppq !== undefined || ({}).ppc !== undefined || typeof ({}).constructor !== 'function',
+    apps: Object.prototype.hasOwnProperty.call(DB.apps || {}, '__proto__'), img: !!document.querySelector('#ppq,#ppc') }));
+  ok('보안: 이상한 키·형식의 서버 기록이 마스터 화면을 오염시키지 않음', !pp.proto && !pp.apps && !pp.img, JSON.stringify({ evil, pp }));
+
   // 10-3b. 같은 계정을 두 번째 탭에서 열면: 그 탭은 가려지고 기록이 막혀요 (전송 대기열 덮어쓰기 방지)
   //        → '이 탭에서 계속 쓰기'로 가져오면 앞 탭이 가려지고 → 그 탭을 닫으면 앞 탭이 자동으로 이어받아요
   const O2 = await O.ctx.newPage();

@@ -432,7 +432,7 @@ function setMe(me){ME={id:me.id,name:me.name};WHO=`${ME.name} · 마스터`;setW
 let toastT;
 function toast(msg,red){const o=$('.toast');o&&o.remove();clearTimeout(toastT);const d=document.createElement('div');d.className='toast'+(red?' red':'');d.innerHTML=(red?ic('alert','s14'):ic('check','s14'))+'<span></span>';d.lastChild.textContent=String(msg);document.body.appendChild(d);toastT=setTimeout(()=>d.remove(),2600);}
 function modal({title,body,actions=[],wide}){
-  $('#modal-root').innerHTML=`<div class="ov" data-act="ov"><div class="modal ${wide?'wide':''}"><div class="mh"><b>${title}</b><button data-act="closeModal" aria-label="닫기">${ic('x')}</button></div><div class="mb">${body}</div>${actions.length?`<div class="mf">${actions.map(a=>`<button class="btn ${a.cls||''}" data-act="${a.act}" ${a.data||''}>${a.label}</button>`).join('')}</div>`:''}</div></div>`;
+  $('#modal-root').innerHTML=`<div class="ov" data-act="ov"><div class="modal ${wide?'wide':''}"><div class="mh"><b>${title}</b><button data-act="closeModal" aria-label="닫기">${ic('x')}</button></div><div class="mb">${body}</div>${actions.length?`<div class="mf">${actions.map(a=>{const own=k=>Object.prototype.hasOwnProperty.call(a,k)?a[k]:'';/* 보안: 원형에서 온 값은 쓰지 않아요 */return `<button class="btn ${esc(own('cls'))}" data-act="${esc(own('act'))}" ${own('data')}>${own('label')}</button>`;}).join('')}</div>`:''}</div></div>`;
 }
 const closeModal=()=>{$('#modal-root').innerHTML='';};
 
@@ -503,7 +503,7 @@ function monRows(room,q,now){
     return mem.map((no,mi)=>{const p=P(no);const a=A(no);const k=esc(no);
       return `<tr class="${mi===0?'gsep':''} ${isNow?'now':''}">
       <td class="num">${esc(J.arrive[no])}</td>
-      ${mi===0?`<td rowspan="${mem.length}" class="num faint" style="vertical-align:top">${stepAt(x,'roomMove')||'—'}</td><td rowspan="${mem.length}" style="vertical-align:top"><span class="sess-t">${HM(x.s)}</span>${shiftTag(x.shift)}<div class="faint" style="font-size:11.5px">${x.members.length>1?`${x.attend}/${x.members.length}명 · `:''}${x.len}분${x.len!==x.planLen?` <span style="color:var(--ok)">(재산정)</span>`:''}</div></td><td rowspan="${mem.length}" class="num" style="vertical-align:top">${HM(x.e)}</td><td rowspan="${mem.length}" class="strong" style="vertical-align:top">${esc(x.label)}</td>`:''}
+      ${mi===0?`<td rowspan="${mem.length}" class="num faint" style="vertical-align:top">${stepAt(x,'roomMove')||'—'}</td><td rowspan="${mem.length}" style="vertical-align:top"><span class="sess-t">${HM(x.s)}</span>${shiftTag(x.shift)}<div class="faint" style="font-size:11.5px">${x.members.length>1?`${x.attend}/${x.members.length}명 · `:''}${x.attend===0?'<b style="color:var(--err)">전원 불참</b> · ':''}${x.len}분${x.len!==x.planLen?` <span style="color:var(--ok)">(재산정)</span>`:''}</div></td><td rowspan="${mem.length}" class="num" style="vertical-align:top">${HM(x.e)}</td><td rowspan="${mem.length}" class="strong" style="vertical-align:top">${esc(x.label)}</td>`:''}
       <td class="strong">${esc(INO(no))}</td><td class="muted num">${k}</td><td>${esc(p.name)}${a.ck&&a.ck.by?`<div class="faint" style="font-size:11px">${esc(a.ck.at)} · ${esc(a.ck.by)}</div>`:''}</td><td><select class="select sm" data-app="${k}:sex" style="width:62px"><option value="" ${a.sex?'':'selected'}>—</option>${['남','여'].map(v=>`<option value="${v}" ${a.sex===v?'selected':''}>${v}</option>`).join('')}</select></td><td class="muted" title="${esc(p.field)}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${esc(shortField(p.field))}</td>
       <td><select class="select sm" data-app="${k}:status" style="width:96px">${CONFIG.statuses.map(s=>`<option value="${s}" ${a.status===s?'selected':''}>${s||'공란'}</option>`).join('')}</select></td>
       ${CONFIG.useDevice?`<td><input class="input sm" value="${esc(a.device)}" data-app="${k}:device" style="width:56px" placeholder="—"></td>`:''}
@@ -559,7 +559,7 @@ function pgMonitor(){
   <div class="tbl-wrap secure wm"><div class="tbl"><table class="board" style="min-width:1390px"><thead><tr>${COLS.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody id="mon-body">
   ${monBody(q,now)}
   </tbody></table></div></div>
-  <div class="note">지연(DELAY)을 입력하면 같은 면접실의 이후 일정이 자동으로 밀려요 · 점심처럼 긴 빈 시간은 지연을 흡수 · 집결 시각과 순서는 그대로 · 조별 면접 불참 시 해당 조 시간 자동 단축</div>
+  <div class="note">지연(DELAY)을 입력하면 같은 면접실의 이후 일정이 자동으로 밀려요 · 점심처럼 긴 빈 시간은 지연을 흡수 · 집결 시각과 순서는 그대로 · 불참이 있어도 그 조 면접시간은 원래 시간표 그대로예요</div>
 
   <div class="cols sec" style="grid-template-columns:1fr 1fr">
     <section>
@@ -1033,7 +1033,7 @@ document.addEventListener('change',e=>{
     if(k==='sex'&&!v)patch.sex=null;
     const txt=k==='status'?`${INO(no)} ${P(no).name} 접수 상태 ${stLabel(old)} → ${stLabel(v)}`:k==='sex'?`${INO(no)} ${P(no).name} 성별 ${v||'삭제'}`:k==='delay'?`${INO(no)} DELAY ${v}분`:k==='device'?`${INO(no)} 전자기기 ${v?v+'번':'번호 삭제'}`:`${INO(no)} 비고 · ${v||'삭제'}`;
     setApp(no,patch,WHO,txt);
-    if(k==='status'&&v==='불참')toast('불참 반영 · 해당 조 면접시간 자동 재산정');
+    if(k==='status'&&v==='불참')toast(`불참 반영 · ${INO(no)} ${P(no).name} · 면접시간은 원래 시간표 그대로`);
     if(k==='delay')toast(`${INO(no)} DELAY ${v}분 · 이후 일정 연쇄 반영 · 도착시간 불변`);
     pending=false;keepScroll(render);return;}
   if(t.id==='fileIn'){handleFile(t.files[0]);return;}

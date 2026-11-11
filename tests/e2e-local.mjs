@@ -154,19 +154,21 @@ try {
     return 'B2조 10:40 (+10)';
   });
 
-  await step('운영자 A: 불참 → 조 면접시간 단축 · 마스터 반영', async () => {
+  await step('운영자 A: 불참 → 면접시간은 원래 시간표 그대로(앞당기지 않음) · 마스터 반영', async () => {
     await op.click('.prow[data-no="T01-0005"]');
     await op.click('.sheet [data-act="setSt"][data-v="불참"]');
+    assert(/원래 시간표 그대로/.test(await op.locator('#dlg').innerText()), '불참 확인창 문구');
     await op.locator('#dlg [data-act="doAbsent"]').click();
-    await op.locator('.toast', { hasText: '25분 → 17분' }).waitFor();
+    await op.locator('.toast', { hasText: '불참' }).waitFor();
+    assert(!(await op.locator('.toast', { hasText: '→' }).count()), '면접시간 줄었다는 알림이 뜨면 안 돼요');
     await op.click('.sheet [data-act="closeSheet"]');
     const sess = await op.locator('.sess', { hasText: 'B2조' }).innerText();
-    assert(sess.includes('2/3명') && sess.includes('17분') && sess.includes('재산정'), 'B2 세션 ' + sess.replace(/\n/g, ' '));
+    assert(sess.includes('2/3명') && !sess.includes('재산정'), 'B2 세션 ' + sess.replace(/\n/g, ' '));
     await until(master, () => document.querySelector('select[data-app="T01-0005:status"]')?.value === '불참');
-    const len = await master.evaluate(() => sessionOf('T01-0005').x.len);
-    assert(len === 17, 'master len ' + len);
+    const x = await master.evaluate(() => { const s = sessionOf('T01-0005').x; return { len: s.len, plan: s.planLen, attend: s.attend }; });
+    assert(x.len === 25 && x.plan === 25 && x.attend === 2, 'master ' + JSON.stringify(x));
     await shot(op, 'operator-list.png');
-    return 'B2조 25분 → 17분';
+    return 'B2조 2/3명 · 25분 유지';
   });
 
   await step('행동 강령 체크 동기화 (운영자 ↔ 마스터)', async () => {
@@ -362,6 +364,42 @@ try {
     await op.evaluate(L => L.forEach(n => setApp(n, { status: '' }, '운영자 · 운영관리자', '미도착 테스트 복구')), m.want);
     await op.click('#tabbar [data-t="board"]');
     return `시작–종료 ${tm[0]} · 성별 남/여 · B2조 미도착 ${m.want.length}명`;
+  });
+
+  await step('조 전원 불참: 시간표 그대로 · \'전원 불참\' 표시 (운영자 명단·운영보드 · 마스터 표)', async () => {
+    const B3 = ['T01-0007', 'T01-0008', 'T01-0009'];
+    await op.evaluate(L => { L.forEach(n => setApp(n, { status: '불참' }, '운영자 · 운영관리자', '전원 불참 테스트')); render(true); }, B3);
+    await until(master, L => L.every(n => A(n).status === '불참'), B3);
+    const x = await master.evaluate(() => { const s = sessionOf('T01-0007').x; return { s: HM(s.s), e: HM(s.e), len: s.len, attend: s.attend, planE: HM(s.it.pe) }; });
+    assert(x.attend === 0 && x.len === 25 && x.e !== x.s, '전원 불참이어도 시간 유지: ' + JSON.stringify(x));
+    await master.evaluate(() => render());
+    assert(await master.locator('#mon-body', { hasText: '전원 불참' }).count() === 1, '마스터 표에 전원 불참');
+    await op.click('#tabbar [data-t="list"]');
+    assert(await op.locator('.sess', { hasText: 'B3조' }).filter({ hasText: '전원 불참' }).count() === 1, '운영자 명단에 전원 불참');
+    /* 운영보드: 다음 입실이 전원 불참 조면 '전원 불참'으로 표시 (B2 진행 중 → 다음 B3) */
+    await op.click('#tabbar [data-t="board"]');
+    /* B3 시작 1분 전(앞 조가 끝났으면 '다음' 칸)과 시작 1분 뒤('진행' 칸) 모두 '전원 불참'으로 보여야 해요 */
+    const line = await op.evaluate(() => { const back = nowMin(); const x = sessionOf('T01-0007').x; const out = [];
+      for (const t of [x.s - 1, x.s + 1]) { shiftClock(t - nowMin()); render(true);
+        out.push([...document.querySelectorAll('.bd-room')].map(e => e.textContent).find(v => v.includes('1면접실')) || ''); }
+      shiftClock(back - nowMin()); render(true); return out.join(' | '); });
+    const [pre, during] = line.split(' | ');
+    assert(/B3조 전원 불참/.test(during) && (/진행/.test(pre) || /B3조 · 전원 불참/.test(pre)), '운영보드 표시: ' + line);
+    await op.evaluate(L => { L.forEach(n => setApp(n, { status: '' }, '운영자 · 운영관리자', '전원 불참 테스트 복구')); render(true); }, B3);
+    return `B3조 ${x.s}–${x.e} 유지 · 전원 불참 표시`;
+  });
+
+  await step('보안: 서버에서 온 키가 객체 원형을 오염시키지 않음 · 확인창 버튼은 원형 값을 쓰지 않음', async () => {
+    const r = await master.evaluate(() => {
+      remoteSet('apps/__proto__/ppx', '"><img id=pp1>'); setIn(DB, 'conduct/constructor/prototype/ppy', 'x');
+      const polluted = ({}).ppx !== undefined || ({}).ppy !== undefined;
+      Object.prototype.cls = '"><img id=pp2 src=x>';
+      try { modal({ title: 't', body: 'b', actions: [{ label: '취소', act: 'closeModal' }] }); } finally { delete Object.prototype.cls; }
+      const injected = !!document.querySelector('#pp1,#pp2'); closeModal();
+      return { polluted, injected };
+    });
+    assert(!r.polluted && !r.injected, JSON.stringify(r));
+    return '원형 오염 0 · 주입 0';
   });
 
   await step('마스터: 한글 엑셀 CSV(CP949)도 읽힘', async () => {

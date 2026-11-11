@@ -258,7 +258,9 @@ function accountsFrom(members,secrets){
 }
 let again=false;   // 동기화 중에 새 변경 신호가 오면 끝난 뒤 한 번 더
 const ackedAfter=(k,started)=>(OUT.ackAt[k]||0)>started;
+const isObj=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
 function applyApp(no,data,started){
+  if(!okKey(no)||(data!=null&&!isObj(data)))return false;   // 보안: 이상한 수험번호·형식은 무시
   if(started&&ackedAfter('app:'+no,started)){again=true;return false;}
   let v=isEmpty(data)?null:data;const p=pendingApp(no);
   if(p)v=stripNulls(Object.assign({},v||{},p));
@@ -267,6 +269,7 @@ function applyApp(no,data,started){
   remoteSet('apps/'+no,isEmpty(v)?null:v);return true;
 }
 function applyKv(table,id,data,started){
+  if(!okKey(id)||(data!=null&&!isObj(data)))return false;   // 보안: 이상한 id·형식은 무시
   if(pendingKv(table,id))return false;
   if(started&&ackedAfter('kv:'+table+':'+id,started)){again=true;return false;}
   const cur=(DB[table]||{})[id]||null;const v=data==null?null:data;
@@ -313,10 +316,10 @@ async function fullLoad(){
   if(lg.error)throw lg.error;
   const next=emptyDB();
   next.roster=rosterFromRow(ro);
-  (d.apps||[]).forEach(a=>{if(!isEmpty(a.data))next.apps[a.no]=a.data;});
-  (d.conduct||[]).forEach(c=>{if(c.data!=null)next.conduct[c.id]=c.data;});
-  (d.extra||[]).forEach(c=>{if(c.data!=null)next.extra[c.id]=c.data;});
-  (lg.data||[]).forEach(l=>{next.log[l.k]={at:l.at,who:l.who,txt:l.txt};});
+  (d.apps||[]).forEach(a=>{if(okKey(a.no)&&isObj(a.data)&&!isEmpty(a.data))next.apps[a.no]=a.data;});
+  (d.conduct||[]).forEach(c=>{if(okKey(c.id)&&isObj(c.data))next.conduct[c.id]=c.data;});
+  (d.extra||[]).forEach(c=>{if(okKey(c.id)&&isObj(c.data))next.extra[c.id]=c.data;});
+  (lg.data||[]).forEach(l=>{if(okKey(l.k))next.log[l.k]={at:l.at,who:l.who,txt:l.txt};});
   next.accounts=accountsFrom(d.members,d.secrets);
   next.resetAt=d.event&&d.event.reset_at;
   // 초기화 전에 만들어졌는데 아직 못 보낸 기록은 버려요 (초기화한 내용이 되살아나지 않게)
@@ -360,7 +363,7 @@ async function pull(force){
     (d.apps||[]).forEach(a=>{if(applyApp(a.no,a.data,started))changed=true;});
     (d.conduct||[]).forEach(c=>{if(applyKv('conduct',c.id,c.data,started))changed=true;});
     (d.extra||[]).forEach(c=>{if(applyKv('extra',c.id,c.data,started))changed=true;});
-    if(master)(d.log||[]).forEach(l=>{CUR.logAfter=Math.max(CUR.logAfter,+l.id||0);if(!DB.log||!DB.log[l.k]){remoteSet('log/'+l.k,{at:l.at,who:l.who,txt:l.txt});changed=true;}});
+    if(master)(d.log||[]).forEach(l=>{CUR.logAfter=Math.max(CUR.logAfter,+l.id||0);if(okKey(l.k)&&(!DB.log||!Object.prototype.hasOwnProperty.call(DB.log,l.k))){remoteSet('log/'+l.k,{at:l.at,who:l.who,txt:l.txt});changed=true;}});
     const acc=accountsFrom(d.members,d.secrets);
     if(!same(acc,DB.accounts)){remoteSet('accounts',acc);changed=true;}
     if(checkOwn(d.members))changed=true;

@@ -62,7 +62,9 @@ const J={name:CONFIG.title,org:CONFIG.org,ready:false,v:0,file:'',labels:{},rost
 let CONDUCT_BASE=[];
 const shortField=f=>{const p=String(f||'').split('_');return p[p.length-1]||f||'';};
 const stepLabel=(k,room)=>((J.labels[k]||{})[room])||STEP_LABEL[k];
-function rosterRows(r){if(!r||!r.rows)return[];const rows=Array.isArray(r.rows)?r.rows:Object.keys(r.rows).sort((a,b)=>a-b).map(k=>r.rows[k]);return rows.filter(Boolean);}
+/* 보안: 수험번호는 객체 키로도 쓰여요 → 원형(__proto__ 등)이나 '/'가 든 값은 버려요 */
+const safeKey=k=>typeof k==='string'&&k!==''&&!k.includes('/')&&k!=='__proto__'&&k!=='constructor'&&k!=='prototype';
+function rosterRows(r){if(!r||!r.rows)return[];const rows=Array.isArray(r.rows)?r.rows:Object.keys(r.rows).sort((a,b)=>a-b).map(k=>r.rows[k]);return rows.filter(x=>x&&safeKey(x.no));}
 function buildJ(){
   const R0=(typeof DB!=='undefined'&&DB.roster)||null;const rows=rosterRows(R0);
   J.ready=rows.length>0;J.v=R0?+R0.v||0:0;J.file=R0?R0.file||'':'';J.labels=(R0&&R0.labels)||{};
@@ -80,13 +82,13 @@ function buildJ(){
     const first=Math.min(...Object.values(J.arrive).map(T));
     CONDUCT_BASE.push({id:'c-open',t:HM(first-10),txt:'지원자 접수 시작 · 신분증 확인',who:'접수'});
     J.sched.rooms.forEach(rm=>rm.items.forEach(it=>{
-      if(it.steps.prepMove)CONDUCT_BASE.push({id:`c-${it.id}-pm`,t:it.steps.prepMove,txt:`${rm.name} · ${it.label} ${stepLabel('prepMove',rm.name)} 안내`.replace('안내 안내','안내'),who:'인솔'});
-      if(it.steps.roomMove)CONDUCT_BASE.push({id:`c-${it.id}-rm`,t:it.steps.roomMove,txt:`${rm.name} · ${it.label} 면접실 이동 안내`,who:'인솔'});
-      CONDUCT_BASE.push({id:`c-${it.id}-out`,t:HM(it.pe),txt:`${rm.name} · ${it.label} 퇴실 안내 · 전자기기 반환`,who:'접수'});
+      if(it.steps.prepMove)CONDUCT_BASE.push({id:`c-${it.id}-pm`,t:it.steps.prepMove,txt:`${rm.name} · ${it.label} ${stepLabel('prepMove',rm.name)} 안내`.replace('안내 안내','안내'),who:'인솔',sess:it.members});
+      if(it.steps.roomMove)CONDUCT_BASE.push({id:`c-${it.id}-rm`,t:it.steps.roomMove,txt:`${rm.name} · ${it.label} 면접실 이동 안내`,who:'인솔',sess:it.members});
+      CONDUCT_BASE.push({id:`c-${it.id}-out`,t:HM(it.pe),txt:`${rm.name} · ${it.label} 퇴실 안내 · 전자기기 반환`,who:'접수',sess:it.members});
     }));
   }
 }
-/* 실제 진행 계산: 불참이면 조 시간 비례 단축 · DELAY 는 이후 일정으로 전파 · 긴 빈 시간(점심 등)은 지연을 흡수 */
+/* 실제 진행 계산: 불참이 있어도 조 시간은 그대로(CONFIG.shrinkOnAbsent 를 켜면 인원 비율만큼 단축) · DELAY 는 이후 일정으로 전파 · 긴 빈 시간(점심 등)은 지연을 흡수 */
 function timeline(room,actual){
   const out=[];let prevE=null,prevPE=null;
   room.items.forEach(it=>{
@@ -230,9 +232,11 @@ function missConduct(now){
   }));
   return out;
 }
+/* 조 전원이 불참이면 그 조의 이동·퇴실 안내는 할 일이 아니에요 */
+const allAbsent=c=>Array.isArray(c.sess)&&c.sess.length>0&&c.sess.every(no=>A(no).status==='불참');
 function conductList(now){
   const extra=Object.entries(DB.extra||{}).map(([id,c])=>Object.assign({id,extra:true},c));
-  return CONDUCT_BASE.concat(extra,missConduct(now==null?nowMin():now)).map(c=>{const d=(DB.conduct||{})[c.id];return Object.assign({},c,{done:!!(d&&d.done),at:d&&d.at,by:d&&d.by});})
+  return CONDUCT_BASE.filter(c=>!allAbsent(c)).concat(extra,missConduct(now==null?nowMin():now)).map(c=>{const d=(DB.conduct||{})[c.id];return Object.assign({},c,{done:!!(d&&d.done),at:d&&d.at,by:d&&d.by});})
     .sort((a,b)=>T(a.t)-T(b.t));
 }
 function lateConduct(now){return conductList(now).filter(c=>!c.done&&T(c.t)<now);}

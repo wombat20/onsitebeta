@@ -380,7 +380,7 @@ STORE.loadAllLogs=async function(){
   if(!isMasterView())return;
   const all=[];let from=0;
   for(;;){const r=await sb.from('log').select('id,k,at,who,txt').eq('event_code',EV).order('id',{ascending:false}).range(from,from+999);if(r.error)throw r.error;all.push(...r.data);if(r.data.length<1000)break;from+=1000;}
-  all.forEach(l=>{if(!DB.log[l.k])remoteSet('log/'+l.k,{at:l.at,who:l.who,txt:l.txt});});
+  all.forEach(l=>{if(okKey(l.k)&&!Object.prototype.hasOwnProperty.call(DB.log||{},l.k))remoteSet('log/'+l.k,{at:l.at,who:l.who,txt:l.txt});});
   saveLocal();
   return all.length;
 };

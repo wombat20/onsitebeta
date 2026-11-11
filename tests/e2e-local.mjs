@@ -372,6 +372,9 @@ try {
     await until(master, L => L.every(n => A(n).status === '불참'), B3);
     const x = await master.evaluate(() => { const s = sessionOf('T01-0007').x; return { s: HM(s.s), e: HM(s.e), len: s.len, attend: s.attend, planE: HM(s.it.pe) }; });
     assert(x.attend === 0 && x.len === 25 && x.e !== x.s, '전원 불참이어도 시간 유지: ' + JSON.stringify(x));
+    /* 전원 불참 조의 이동·퇴실 안내는 행동 강령에서 빠져요 */
+    const left = await master.evaluate(() => conductList(T('09:00')).filter(c => c.kind !== 'miss' && /B3조/.test(c.txt)).map(c => c.txt));
+    assert(left.length === 0, '전원 불참 조 행동 강령: ' + JSON.stringify(left));
     await master.evaluate(() => render());
     assert(await master.locator('#mon-body', { hasText: '전원 불참' }).count() === 1, '마스터 표에 전원 불참');
     await op.click('#tabbar [data-t="list"]');
@@ -392,6 +395,8 @@ try {
   await step('보안: 서버에서 온 키가 객체 원형을 오염시키지 않음 · 확인창 버튼은 원형 값을 쓰지 않음', async () => {
     const r = await master.evaluate(() => {
       remoteSet('apps/__proto__/ppx', '"><img id=pp1>'); setIn(DB, 'conduct/constructor/prototype/ppy', 'x');
+      const rr = rosterRows({ rows: [{ no: '__proto__' }, { no: 'a/b' }, { no: 'constructor' }, { no: 'OK-1' }] }).map(r => r.no).join(',');
+      if (rr !== 'OK-1') return { polluted: true, injected: false, rr };
       const polluted = ({}).ppx !== undefined || ({}).ppy !== undefined;
       Object.prototype.cls = '"><img id=pp2 src=x>';
       try { modal({ title: 't', body: 'b', actions: [{ label: '취소', act: 'closeModal' }] }); } finally { delete Object.prototype.cls; }

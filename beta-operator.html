@@ -557,7 +557,7 @@ function sessRows(list,showRoom){
     const x=o.x;const mem=x.members.filter(no=>{if(!q)return true;const pp=P(no);return (pp.name+no+INO(no)).includes(q);});
     if(!mem.length)return '';
     const shift=x.shift;const isNow=x.s<=now&&x.e>now,done=x.e<=now;
-    return `<div class="sess ${isNow?'now':''} ${done?'done':''}"><div class="sess-h"><span class="tm">${HM(x.s)}<span class="tm-e">–${HM(x.e)}</span>${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}</span><span class="lb">${showRoom?esc(o.room.name)+' · ':''}${esc(x.label)} · ${x.attend}/${x.members.length}명 · ${x.len}분${!done?` · 대기 ${HM(x.s-10)}`:''}</span>${x.len!==x.planLen?'<span class="rc">재산정</span>':''}${isNow?'<span class="nowtag">진행 중</span>':''}</div>
+    return `<div class="sess ${isNow?'now':''} ${done?'done':''}"><div class="sess-h"><span class="tm">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}<span class="tm-e">–${HM(x.e)}</span></span><span class="lb">${showRoom?esc(o.room.name)+' · ':''}${esc(x.label)} · ${x.attend}/${x.members.length}명 · ${x.e-x.s}분${!done?` · 대기 ${HM(x.s-10)}`:''}</span>${x.len!==x.planLen?'<span class="rc">재산정</span>':''}${isNow?'<span class="nowtag">진행 중</span>':''}</div>
       ${mem.map(no=>{const a=A(no),pp=P(no);return `<div class="prow ${a.status==='불참'?'absent':''}" data-act="open" data-no="${esc(no)}"><span class="no">${esc(J.arrive[no])}</span><div class="who"><div class="l1">${esc(INO(no))}<span>${esc(pp.name)}</span></div><div class="l2">${esc(no)}${a.sex?` · ${esc(a.sex)}`:''}${CONFIG.useDevice&&a.device?` · 기기 ${esc(a.device)}`:''}${a.inR?' · 입실':''}${a.outR?' · 퇴실':''}${a.delay?` · <i>DELAY +${a.delay}</i>`:''}${a.note?` · ${esc(a.note)}`:''}</div></div><span class="st ${statusCls(a.status)}">${esc(stLabel(a.status))}</span></div>`;}).join('')}</div>`;
   }).join('');
 }
@@ -579,7 +579,7 @@ function sheetApp(no){
   <div style="margin-top:8px">
     <div class="kv"><span class="k">연락처</span><span class="v">${pp.phone?`${esc(pp.phone)}<a class="call" href="tel:${pp.phone.replace(/[^0-9+]/g,'')}">${ic('phone','s14')}전화</a>`:'<span style="color:var(--tx3)">—</span>'}</span></div>
     <div class="kv"><span class="k">도착시간 <small style="color:var(--tx3)">(안내 · 고정)</small></span><span class="v">${esc(J.arrive[no])}</span></div>
-    <div class="kv"><span class="k">면접 시간 <small style="color:var(--tx3)">(내부)</small></span><span class="v">${HM(x.s)}–${HM(x.e)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''} · ${x.len}분</span></div>
+    <div class="kv"><span class="k">면접 시간 <small style="color:var(--tx3)">(내부)</small></span><span class="v">${HM(x.s)}${shift>0?`<span class="dly">+${shift}</span>`:shift<0?`<span class="shr">${shift}</span>`:''}–${HM(x.e)} · ${x.e-x.s}분</span></div>
     ${a.ck?`<div class="kv"><span class="k">접수 처리</span><span class="v">${esc(a.ck.at)}${a.ck.by?` · ${esc(a.ck.by)}`:''}</span></div>`:''}
   </div>
   <div class="flabel">성별 <span style="font-weight:500;color:var(--tx3)">(다시 누르면 지워져요)</span></div>

@@ -235,12 +235,14 @@ function conductList(now){
 }
 function lateConduct(now){return conductList(now).filter(c=>!c.done&&T(c.t)<now);}
 function soonConduct(now){return conductList(now).filter(c=>!c.done&&T(c.t)>=now&&T(c.t)-now<=10);}
-/* 이 분(m)에 띄울 알림 · 미도착은 집결 5분 전과 정각, 나머지는 10분 전과 정각 · 미도착이 먼저 */
+/* 이 분(m)에 띄울 알림 · 미도착은 집결 5분 전과 정각, 나머지는 10분 전과 정각
+   같은 분에 여러 개면 한 알림에 모아요 (미도착 먼저 · 3개까지 쓰고 나머지는 '외 n건') */
 function conductAlert(m,onlyMiss){
-  const L=soonConduct(m).filter(c=>(!onlyMiss||c.kind==='miss')&&(T(c.t)===m||T(c.t)-m===(c.kind==='miss'?MISS_BEFORE:10)));
-  const s=L.find(c=>c.kind==='miss')||L[0];if(!s)return null;
-  const at=T(s.t)===m;
-  return {msg:`${s.kind==='miss'?(at?'집결 마감':`${MISS_BEFORE}분 후 집결 마감`):(at?'지금 할 일':'10분 후')} · ${s.txt}`,red:s.kind==='miss'};
+  const L=soonConduct(m).filter(c=>(!onlyMiss||c.kind==='miss')&&(T(c.t)===m||T(c.t)-m===(c.kind==='miss'?MISS_BEFORE:10)))
+    .sort((a,b)=>(a.kind==='miss'?0:1)-(b.kind==='miss'?0:1));
+  if(!L.length)return null;
+  const fmt=c=>{const at=T(c.t)===m;return `${c.kind==='miss'?(at?'집결 마감':`${MISS_BEFORE}분 후 집결 마감`):(at?'지금 할 일':'10분 후')} · ${c.txt}`;};
+  return {msg:L.slice(0,3).map(fmt).join(' / ')+(L.length>3?` 외 ${L.length-3}건`:''),red:L.some(c=>c.kind==='miss'),n:L.length};
 }
 
 function sessionOf(no){for(const rm of J.sched.rooms){for(const x of sessions(rm,true)){if(x.members.includes(no))return{x,room:rm};}}return null;}

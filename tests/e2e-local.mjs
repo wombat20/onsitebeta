@@ -312,7 +312,10 @@ try {
   await step('기능: 운영자 명단 시작–종료 표시 · 성별 체크(운영자 ↔ 마스터 · CSV) · 미도착 행동 강령(집결 5분 전·정각 알림 · 접수하면 빠짐)', async () => {
     /* 1) 운영자 명단: 조 머리에 시작–종료 */
     await op.click('#tabbar [data-t="list"]');
-    const tm = await op.evaluate(() => [...document.querySelectorAll('#list-body .sess-h .tm')].slice(0, 4).map(e => e.textContent.replace(/[+-]\d+$/, '')));
+    const tmRaw = await op.evaluate(() => [...document.querySelectorAll('#list-body .sess-h .tm')].map(e => e.textContent));
+    const tm = tmRaw.slice(0, 4).map(t => t.replace(/[+-]\d+(?=–)/, ''));
+    /* 지연(+n)은 시작 시각 바로 뒤에 붙어요 (종료가 밀린 것처럼 읽히지 않게) */
+    assert(tmRaw.some(t => /^\d\d:\d\d\+\d+–\d\d:\d\d$/.test(t)), '지연 표시 위치: ' + JSON.stringify(tmRaw));
     assert(tm.length >= 3 && tm.every(t => /^\d\d:\d\d–\d\d:\d\d/.test(t)), '시작–종료: ' + JSON.stringify(tm));
     /* 2) 성별: 운영자 상세에서 '여' → 마스터 표 · 다시 누르면 지움 · 마스터에서 '남' → 운영자 */
     const NO = 'T01-0009';
@@ -336,10 +339,16 @@ try {
       const slot = L => L.filter(c => c.kind === 'miss' && c.txt.includes('B2조'));
       const want = J.roster.filter(r => r.grp === 'B2' && !['접수', '불참'].includes(A(r.no).status)).map(r => r.no);
       return { before: slot(conductList(T('09:44'))).length, at: slot(conductList(T('09:45'))).map(c => ({ t: c.t, who: c.who, nos: c.nos, txt: c.txt })), want,
-        a5: conductAlert(T('09:45'), true), a0: conductAlert(T('09:50'), true), a1: conductAlert(T('09:46'), true) };
+        a5: conductAlert(T('09:45'), true), a0: conductAlert(T('09:50'), true), a1: conductAlert(T('09:46'), true),
+        /* 09:15 · 1면접실 B1조와 2면접실 A2조가 같은 09:20 집결 → 한 알림에 둘 다 */
+        both: conductAlert(T('09:15'), true) };
     });
     assert(m.want.length > 0 && m.before === 0 && m.at.length === 1 && m.at[0].t === '09:50' && m.at[0].who === '접수' && JSON.stringify(m.at[0].nos) === JSON.stringify(m.want), '미도착 항목: ' + JSON.stringify(m));
     assert(m.a5 && m.a5.red && /^5분 후 집결 마감 · .*B2조 미도착/.test(m.a5.msg) && m.a0 && /^집결 마감 · .*B2조 미도착/.test(m.a0.msg) && !m.a1, '알림: ' + JSON.stringify([m.a5, m.a0, m.a1]));
+    assert(m.both && m.both.n === 2 && /B1조 미도착/.test(m.both.msg) && /A2조 미도착/.test(m.both.msg), '같은 분 알림 모음: ' + JSON.stringify(m.both));
+    /* 운영자: 미도착과 일반 행동 강령이 같은 분이면 둘 다 (10:05 · C-1 미도착 5분 전 + C-1 인성검사 안내 10분 전) */
+    const mix = await op.evaluate(() => conductAlert(T('10:05')));
+    assert(mix && mix.n >= 2 && /미도착/.test(mix.msg) && /10분 후 · /.test(mix.msg), '미도착+일반 알림: ' + JSON.stringify(mix));
     /* 지금(테스트 시각 10:00)은 집결이 지난 미도착 → 미완료로 보여요 · 운영자 화면 행동 강령에도 */
     assert(await master.evaluate(() => lateConduct(nowMin()).some(c => c.kind === 'miss' && c.txt.includes('B2조'))), '마감 지난 미도착은 미완료');
     await op.click('#tabbar [data-t="conduct"]');

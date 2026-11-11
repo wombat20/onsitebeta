@@ -871,11 +871,13 @@ function safeRender(){
 }
 document.addEventListener('focusout',()=>{S.composing=false;if(pending)setTimeout(()=>{if(pending){safeRender();}},0);});   // 조합 중에 칸을 떠나도 '조합 중'이 남지 않게
 onDB(safeRender);
-setInterval(()=>{const m=nowMin();
+setInterval(()=>{const m=nowMin();const newMin=m!==S.lastMin;
+  // 분이 바뀌면 미도착 알림부터 (화면을 어떻게 다시 그리든 빠지지 않게)
+  if(newMin){S.lastMin=m;const al=S.auth&&J.ready?conductAlert(m,true):null;if(al)toast(al.msg,true);}
   // 선택 상자 등에 오래(15초+) 머물러 있으면 화면을 새로 그려요 (현장 현황이 멈춰 보이지 않게)
   // 글자를 입력하는 중(저장 전·한글 조합 중)이거나 창이 열려 있으면 기다려요 → 덜 쓴 내용이 저장되지 않게
-  if(pending&&pendingSince&&Date.now()-pendingSince>15000&&!S.composing&&!$('#modal-root').innerHTML&&!dirtyText(document.activeElement)){pending=false;pendingSince=0;S.lastMin=m;renderKeep();return;}
-  if(m!==S.lastMin){S.lastMin=m;const al=S.auth&&J.ready?conductAlert(m,true):null;if(al)toast(al.msg,true);safeRender();}},10000);
+  if(pending&&pendingSince&&Date.now()-pendingSince>15000&&!S.composing&&!$('#modal-root').innerHTML&&!dirtyText(document.activeElement)){pending=false;pendingSince=0;renderKeep();return;}
+  if(newMin)safeRender();},10000);
 
 /* =====================================================================
    계정 처리

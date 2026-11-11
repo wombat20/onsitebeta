@@ -309,6 +309,52 @@ try {
     return '검색창 그대로 · 명단만 갱신';
   });
 
+  await step('기능: 운영자 명단 시작–종료 표시 · 성별 체크(운영자 ↔ 마스터 · CSV) · 미도착 행동 강령(집결 5분 전·정각 알림 · 접수하면 빠짐)', async () => {
+    /* 1) 운영자 명단: 조 머리에 시작–종료 */
+    await op.click('#tabbar [data-t="list"]');
+    const tm = await op.evaluate(() => [...document.querySelectorAll('#list-body .sess-h .tm')].slice(0, 4).map(e => e.textContent.replace(/[+-]\d+$/, '')));
+    assert(tm.length >= 3 && tm.every(t => /^\d\d:\d\d–\d\d:\d\d/.test(t)), '시작–종료: ' + JSON.stringify(tm));
+    /* 2) 성별: 운영자 상세에서 '여' → 마스터 표 · 다시 누르면 지움 · 마스터에서 '남' → 운영자 */
+    const NO = 'T01-0009';
+    await op.click(`.prow[data-no="${NO}"]`);
+    await op.click(`.sheet [data-act="sex"][data-v="여"]`);
+    await until(master, n => A(n).sex === '여' && document.querySelector(`select[data-app="${n}:sex"]`)?.value === '여', NO);
+    assert(await op.evaluate(n => /여/.test(document.querySelector(`.prow[data-no="${n}"] .l2`)?.textContent || ''), NO), '운영자 명단에 성별 표시');
+    await op.click(`.sheet [data-act="sex"][data-v="여"]`);
+    await until(master, n => A(n).sex === '' && !(DB.apps[n] || {}).sex, NO);
+    await master.selectOption(`select[data-app="${NO}:sex"]`, '남');
+    await until(op, n => A(n).sex === '남' && !!document.querySelector(`.sheet [data-act="sex"][data-v="남"].on`), NO);
+    await op.click('.sheet [data-act="closeSheet"]');
+    const dl = master.waitForEvent('download');
+    await master.click('#nav [data-p="admin"]'); await master.click('[data-act="boardCsv"]');
+    const csv = fs.readFileSync(await (await dl).path(), 'utf8');
+    const head = csv.replace(/^\uFEFF/, '').split('\n')[0].split(','); const row = csv.split('\n').find(l => l.includes(NO)).split(',');
+    assert(head.includes('성별') && row[head.indexOf('성별')] === '남', 'CSV 성별: ' + head.join('|'));
+    await master.click('#nav [data-p="monitor"]');
+    /* 3) 미도착 확인: B2조(집결 09:50) · 09:44 에는 없고 09:45 부터 · 접수·불참이 아닌 사람만 */
+    const m = await master.evaluate(() => {
+      const slot = L => L.filter(c => c.kind === 'miss' && c.txt.includes('B2조'));
+      const want = J.roster.filter(r => r.grp === 'B2' && !['접수', '불참'].includes(A(r.no).status)).map(r => r.no);
+      return { before: slot(conductList(T('09:44'))).length, at: slot(conductList(T('09:45'))).map(c => ({ t: c.t, who: c.who, nos: c.nos, txt: c.txt })), want,
+        a5: conductAlert(T('09:45'), true), a0: conductAlert(T('09:50'), true), a1: conductAlert(T('09:46'), true) };
+    });
+    assert(m.want.length > 0 && m.before === 0 && m.at.length === 1 && m.at[0].t === '09:50' && m.at[0].who === '접수' && JSON.stringify(m.at[0].nos) === JSON.stringify(m.want), '미도착 항목: ' + JSON.stringify(m));
+    assert(m.a5 && m.a5.red && /^5분 후 집결 마감 · .*B2조 미도착/.test(m.a5.msg) && m.a0 && /^집결 마감 · .*B2조 미도착/.test(m.a0.msg) && !m.a1, '알림: ' + JSON.stringify([m.a5, m.a0, m.a1]));
+    /* 지금(테스트 시각 10:00)은 집결이 지난 미도착 → 미완료로 보여요 · 운영자 화면 행동 강령에도 */
+    assert(await master.evaluate(() => lateConduct(nowMin()).some(c => c.kind === 'miss' && c.txt.includes('B2조'))), '마감 지난 미도착은 미완료');
+    await op.click('#tabbar [data-t="conduct"]');
+    await op.click('.chips [data-act="cdf"][data-k="접수"]');   // 담당 '접수' 필터에서도 보여요
+    assert(await op.locator('.titem', { hasText: 'B2조 미도착' }).count() === 1, '운영자 행동 강령에 미도착 항목');
+    await op.click('.chips [data-act="cdf"][data-k="전체"]');
+    /* 모두 접수하면 항목이 사라져요 */
+    await op.evaluate(L => { L.forEach(n => setApp(n, { status: '접수' }, '운영자 · 운영관리자', '미도착 테스트')); render(true); }, m.want);   // 화면 버튼과 같이 기록 뒤 다시 그려요
+    await until(master, () => !conductList().some(c => c.kind === 'miss' && c.txt.includes('B2조')));
+    await until(op, () => !document.querySelector('.titem') || ![...document.querySelectorAll('.titem')].some(e => /B2조 미도착/.test(e.textContent)));
+    await op.evaluate(L => L.forEach(n => setApp(n, { status: '' }, '운영자 · 운영관리자', '미도착 테스트 복구')), m.want);
+    await op.click('#tabbar [data-t="board"]');
+    return `시작–종료 ${tm[0]} · 성별 남/여 · B2조 미도착 ${m.want.length}명`;
+  });
+
   await step('마스터: 한글 엑셀 CSV(CP949)도 읽힘', async () => {
     const tmp = path.join(SHOTS_DIR, 'timetable-cp949.csv');
     const { execFileSync } = await import('node:child_process');

@@ -40,10 +40,12 @@ async function inPage({ csvUrl, xlsxUrl, brokenCsvUrl, brokenXlsxUrl }) {
     steps: sessions(rm, true).map(x => ({ id: x.it.id, pm: stepAt(x, 'prepMove'), ps: stepAt(x, 'prepStart'), rm: stepAt(x, 'roomMove') })),
     labels: ['prepMove', 'prepStart', 'roomMove'].map(k => stepLabel(k, rm.name)),
   }));
-  out.conduct = conductList().map(c => ({ id: c.id, t: c.t, txt: c.txt, who: c.who, done: c.done }));
+  /* 미도착 확인(kind 'miss')은 원본 v2 에 없던 자동 항목이라 기준값 비교에서 빼요 (tests/e2e-local.mjs 에서 따로 확인) */
+  const base = L => L.filter(c => c.kind !== 'miss');
+  out.conduct = base(conductList()).map(c => ({ id: c.id, t: c.t, txt: c.txt, who: c.who, done: c.done }));
   out.now = nowMin();
-  out.late600 = lateConduct(600).map(c => c.id);
-  out.soonNow = soonConduct(nowMin()).map(c => c.id);
+  out.late600 = base(lateConduct(600)).map(c => c.id);
+  out.soonNow = base(soonConduct(nowMin())).map(c => c.id);
   out.lookups = J.roster.map(r => {
     const s = sessionOf(r.no);
     return { no: r.no, ino: INO(r.no), name: P(r.no).name, short: shortField(P(r.no).field), st: stLabel(A(r.no).status), cls: statusCls(A(r.no).status),
@@ -60,7 +62,9 @@ async function inPage({ csvUrl, xlsxUrl, brokenCsvUrl, brokenXlsxUrl }) {
   out.changed = { delayNo: a, absentNo: b };
   out.after = J.sched.rooms.map(rm => ({ name: rm.name, tlActual: clone(timeline(rm, true).map(tl)), roomDelay: roomDelay(rm) }));
   out.afterApps = clone(DB.apps);
-  out.afterJApps = { [a]: clone(A(a)), [b]: clone(A(b)) };
+  /* 성별(sex)은 원본 v2 이후에 추가한 칸이라 기준값 비교에서 빼요 */
+  const noSex = o => { const c = clone(o); if (c) delete c.sex; return c; };
+  out.afterJApps = { [a]: noSex(A(a)), [b]: noSex(A(b)) };
   out.afterLogs = logList().map(l => [l.who, l.txt]).sort();
   out.afterSess = [a, b].map(no => { const s = sessionOf(no); return { no, s: s.x.s, e: s.x.e, len: s.x.len, attend: s.x.attend, delay: s.x.delay, shift: s.x.shift }; });
   /* null 패치는 키 삭제 */

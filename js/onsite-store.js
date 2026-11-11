@@ -32,7 +32,7 @@ let builtV=-1;
 function applyDB(){
   const v=DB.roster?(+DB.roster.v||1):0;if(v!==builtV){builtV=v;buildJ();}
   J.roster.forEach(r=>{const a=J.apps[r.no];const d=(DB.apps||{})[r.no]||{};
-    a.status=CONFIG.statuses.includes(d.status)?d.status:'';a.device=d.device==null?'':String(d.device);a.inR=!!d.inR;a.outR=!!d.outR;a.fee=!!d.fee;a.delay=+d.delay||0;a.note=d.note||'';a.ck=d.ck||null;});
+    a.status=CONFIG.statuses.includes(d.status)?d.status:'';a.device=d.device==null?'':String(d.device);a.inR=!!d.inR;a.outR=!!d.outR;a.fee=!!d.fee;a.delay=+d.delay||0;a.note=d.note||'';a.ck=d.ck||null;a.sex=d.sex==='남'||d.sex==='여'?d.sex:'';});
 }
 function setIn(o,path,val){
   const ks=String(path).split('/').filter(Boolean);let c=o;

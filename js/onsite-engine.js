@@ -55,7 +55,7 @@ const DATE_LABEL=`${CONFIG.date}(${CONFIG.dow})`;
    행: {no,name,field,phone,phone2,room,day,grp,ino,arrive,prepMove,prepStart,roomMove,start,end}
    ===================================================================== */
 const STEP_LABEL={prepMove:'준비실 이동',prepStart:'준비 시작',roomMove:'면접실 이동'};
-function blankApp(){return{status:'',device:'',inR:false,outR:false,fee:false,delay:0,note:'',ck:null};}
+function blankApp(){return{status:'',device:'',inR:false,outR:false,fee:false,delay:0,note:'',ck:null,sex:''};}
 const J={name:CONFIG.title,org:CONFIG.org,ready:false,v:0,file:'',labels:{},roster:[],byNo:{},apps:{},arrive:{},sched:{rooms:[]}};
 let CONDUCT_BASE=[];
 const shortField=f=>{const p=String(f||'').split('_');return p[p.length-1]||f||'';};
@@ -211,13 +211,37 @@ const P=no=>J.byNo[no]||{no,name:'',field:'',phone:''};
 const INO=no=>(J.byNo[no]||{})['ino']||no;
 
 /* ---------- 행동 강령 ---------- */
-function conductList(){
+/* 미도착 확인 (자동) · 집결 시각 5분 전부터, 아직 접수되지 않은 지원자가 있는 조마다 하나씩 생겨요
+   접수(또는 불참 처리)되면 목록에서 빠지고, 모두 도착하면 항목이 사라져요 · 체크하면 완료로 남아요 */
+const MISS_BEFORE=5;
+function missConduct(now){
+  const out=[];if(!J.ready)return out;
+  J.sched.rooms.forEach(rm=>rm.items.forEach(it=>{
+    const by={};it.members.forEach(no=>{const t=J.arrive[no];if(t)(by[t]=by[t]||[]).push(no);});
+    Object.keys(by).forEach(t=>{
+      if(now<T(t)-MISS_BEFORE)return;
+      const miss=by[t].filter(no=>{const s=A(no).status;return s!=='접수'&&s!=='불참';});
+      if(!miss.length)return;
+      out.push({id:`c-${it.id}-arr${t.replace(':','')}`,t,kind:'miss',who:'접수',nos:miss,
+        txt:`${rm.name} · ${it.label} 미도착 ${miss.length}명: ${miss.map(no=>P(no).name).join(', ')} · 연락 필요`});
+    });
+  }));
+  return out;
+}
+function conductList(now){
   const extra=Object.entries(DB.extra||{}).map(([id,c])=>Object.assign({id,extra:true},c));
-  return CONDUCT_BASE.concat(extra).map(c=>{const d=(DB.conduct||{})[c.id];return Object.assign({},c,{done:!!(d&&d.done),at:d&&d.at,by:d&&d.by});})
+  return CONDUCT_BASE.concat(extra,missConduct(now==null?nowMin():now)).map(c=>{const d=(DB.conduct||{})[c.id];return Object.assign({},c,{done:!!(d&&d.done),at:d&&d.at,by:d&&d.by});})
     .sort((a,b)=>T(a.t)-T(b.t));
 }
-function lateConduct(now){return conductList().filter(c=>!c.done&&T(c.t)<now);}
-function soonConduct(now){return conductList().filter(c=>!c.done&&T(c.t)>=now&&T(c.t)-now<=10);}
+function lateConduct(now){return conductList(now).filter(c=>!c.done&&T(c.t)<now);}
+function soonConduct(now){return conductList(now).filter(c=>!c.done&&T(c.t)>=now&&T(c.t)-now<=10);}
+/* 이 분(m)에 띄울 알림 · 미도착은 집결 5분 전과 정각, 나머지는 10분 전과 정각 · 미도착이 먼저 */
+function conductAlert(m,onlyMiss){
+  const L=soonConduct(m).filter(c=>(!onlyMiss||c.kind==='miss')&&(T(c.t)===m||T(c.t)-m===(c.kind==='miss'?MISS_BEFORE:10)));
+  const s=L.find(c=>c.kind==='miss')||L[0];if(!s)return null;
+  const at=T(s.t)===m;
+  return {msg:`${s.kind==='miss'?(at?'집결 마감':`${MISS_BEFORE}분 후 집결 마감`):(at?'지금 할 일':'10분 후')} · ${s.txt}`,red:s.kind==='miss'};
+}
 
 function sessionOf(no){for(const rm of J.sched.rooms){for(const x of sessions(rm,true)){if(x.members.includes(no))return{x,room:rm};}}return null;}
 const stLabel=s=>s||'공란';

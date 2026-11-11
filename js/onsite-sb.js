@@ -230,7 +230,7 @@ STORE.remote={
     if((ks[0]==='conduct'||ks[0]==='extra')&&ks.length===2){OUT.push({t:'kv',table:ks[0],id:ks[1],data:val==null?null:val});return;}
     if((ks[0]==='conduct'||ks[0]==='extra')&&ks.length>2){const cur=((DB[ks[0]]||{})[ks[1]])||null;OUT.push({t:'kv',table:ks[0],id:ks[1],data:cur});return;}
     if(ks[0]==='apps'&&ks[1]){
-      if(ks.length===2){const cur=(DB.apps||{})[ks[1]]||{};const patch=Object.assign({},val||{});['status','device','inR','outR','fee','delay','note','ck'].forEach(k=>{if(!(k in patch))patch[k]=null;});delete patch._ts;const p=val==null?Object.fromEntries(Object.keys(cur).filter(k=>k!=='_ts').map(k=>[k,null])):patch;OUT.push({t:'app',no:ks[1],patch:p,ts:stampTs(p)});}
+      if(ks.length===2){const cur=(DB.apps||{})[ks[1]]||{};const patch=Object.assign({},val||{});['status','device','inR','outR','fee','delay','note','ck','sex'].forEach(k=>{if(!(k in patch))patch[k]=null;});delete patch._ts;const p=val==null?Object.fromEntries(Object.keys(cur).filter(k=>k!=='_ts').map(k=>[k,null])):patch;OUT.push({t:'app',no:ks[1],patch:p,ts:stampTs(p)});}
       else OUT.push({t:'app',no:ks[1],patch:{[ks[2]]:val==null?null:val},ts:stampTs({[ks[2]]:1})});
       return;
     }
